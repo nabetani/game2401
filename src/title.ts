@@ -35,6 +35,21 @@ export class Title extends Phaser.Scene {
   startClicked() {
     this.scene.start('GameMain', { soundOn: this.soundOn });
   }
+  addLinks() {
+    const tag = "tbd";
+    let y = this.sys.game.canvas.height - 10;
+    [
+      ["Source code and license", "https://github.com/nabetani/game2401/"],
+      ["鍋谷武典 @ タイッツー", "https://taittsuu.com/users/nabetani"],
+      ["制作ノート", "https://nabetani.hatenadiary.com/entry/2024/01/game24b"],
+      ["タイッツー #" + tag, "https://taittsuu.com/search/taiitsus/hashtags?query=" + tag],
+    ].forEach((e, ix) => {
+      const text = this.add_text(500, y, {}, e[0],
+        { pointerdown: () => { window.location.href = e[1]; } });
+      text.setOrigin(1, 1);
+      y = text.getBounds().top - 10;
+    });
+  }
   create() {
     const { width, height } = this.sys.game.canvas;
     this.add.image(0, 0, 'title').setOrigin(0, 0);
@@ -52,6 +67,7 @@ export class Title extends Phaser.Scene {
     toggleSound(false);
     this.add_text(width / 2, height / 2, { fontSize: "35px" }, 'Click here to start game',
       { pointerdown: () => this.startClicked() })
+    this.addLinks();
   }
 }
 
