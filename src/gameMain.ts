@@ -18,7 +18,7 @@ interface QRef {
 }
 interface QInfo {
   ref: QRef
-  body: QRef[]
+  body: QLine[]
 }
 
 const LinePerSec = 1 / 2
@@ -72,7 +72,7 @@ export class GameMain extends BaseScene {
   constructor() {
     super("GameMain");
   }
-  calcTextSize(lines: QRef[], w: number, h: number): number {
+  calcTextSize(lines: QLine[], w: number, h: number): number {
     const s = {
       fontFamily: 'sans-serif',
       padding: { x: 0, y: 0 },
