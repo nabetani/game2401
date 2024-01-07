@@ -7,3 +7,9 @@ a tiny web game (2024.01)
 $ npm install
 $ npx webpack-dev-server
 ```
+
+## how to make to publish
+
+```
+$ npx webpack --mode production
+```
