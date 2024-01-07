@@ -21,10 +21,54 @@ interface QInfo {
   body: QRef[]
 }
 
+const LinePerSec = 1 / 2
+
+class Line {
+  tick: number
+  timer: Phaser.GameObjects.Text
+  text: Phaser.GameObjects.Text
+  constructor(tick: number, timer: Phaser.GameObjects.Text, text: Phaser.GameObjects.Text) {
+    this.tick = tick
+    this.timer = timer
+    this.text = text
+  }
+}
 
 export class GameMain extends BaseScene {
   q: QInfo | undefined
+  tick: number = -1
   textSize: number = 0
+  get timerRight(): number {
+    const w = this.sys.game.canvas.width
+    return w / 7;
+  }
+  get timerLeft(): number {
+    return 10
+  }
+  get timerW(): number {
+    return this.timerRight - this.timerLeft
+  }
+  get timerC(): number {
+    return this.timerLeft + this.timerW / 2
+  }
+  get textLeft(): number {
+    return this.timerRight + 10
+  }
+  get textRight(): number {
+    const w = this.sys.game.canvas.width
+    return w - 10
+  }
+  get textW(): number {
+    return this.textRight - this.textLeft
+  }
+  get textWI(): number {
+    return this.textW - 16
+  }
+  get textC(): number {
+    return this.textLeft + this.textW / 2
+  }
+
+  lines: Line[] = []
   constructor() {
     super("GameMain");
   }
@@ -46,19 +90,47 @@ export class GameMain extends BaseScene {
     return size;
   }
   create(data: { sound: boolean, q: integer },) {
+    const { width, height } = this.sys.game.canvas
     this.q = Q[data.q] as QInfo
-    this.textSize = this.calcTextSize(this.q.body, 480, 900);
-    this.q.body.forEach((val, ix) => {
-      this.add_text(256, (ix + 0.5) * 900 / 17, {
-        fontSize: `${this.textSize}px`,
-        width: "500px",
-        fixedWidth: 500,
-        align: "left",
-      }, val.t, {});
-    })
+    this.textSize = this.calcTextSize(this.q.body, this.textWI, height);
+    this.tick = -0.5 * this.fps();
   }
   preload() {
   }
+  showLine(ix: integer) {
+    const q = this.q
+    const val = this.q!.body[ix]
+    if (!q || !val) { return }
+    const { width, height } = this.sys.game.canvas
+    const lineH = height / q.body.length * 0.7
+    const y = height / q.body.length * (ix + 0.5);
+    const text = this.add_text(this.textC, y, {
+      fontSize: `${this.textSize}px`,
+      width: `${this.textW}px`,
+      fixedWidth: this.textW,
+      align: "left",
+    }, val.t, {});
+    text.on("pointerdown", () => {
+      this.clicked(ix);
+    }).setInteractive();
+    const timer = this.add_text(this.timerC, y, {
+      fontSize: "19px",
+      fontFamily: "monospace",
+      width: `${this.timerW}px`,
+      fixedWidth: this.timerW,
+      align: "right",
+    }, "012:34", {});
+    this.lines[ix] = new Line(this.tick, timer, text)
+  }
+  clicked(ix: integer) {
+    console.log({ clicked: ix })
+  }
   update(t: number, d: number) {
+    const prevLine = this.tick / this.fps() * LinePerSec
+    ++this.tick;
+    const curLine = this.tick / this.fps() * LinePerSec
+    if (prevLine != curLine) {
+      this.showLine(curLine);
+    }
   }
 }
