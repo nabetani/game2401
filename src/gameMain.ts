@@ -67,12 +67,24 @@ export class GameMain extends BaseScene {
   get textC(): number {
     return this.textLeft + this.textW / 2
   }
+  get captionBounding(): Phaser.Geom.Rectangle {
+    return new Phaser.Geom.Rectangle(
+      this.textLeft, 10,
+      this.textW, 90);
+  }
+  get linesBounding(): Phaser.Geom.Rectangle {
+    const h = this.sys.game.canvas.height
+    const top = this.captionBounding.bottom
+    return new Phaser.Geom.Rectangle(
+      this.textLeft, top,
+      this.textW, h - top - 10)
+  }
 
   lines: Line[] = []
   constructor() {
     super("GameMain");
   }
-  calcTextSize(lines: QLine[], w: number, h: number): number {
+  calcTextSize(lines: QLine[] | QRef[], w: number, h: number): number {
     const s = {
       fontFamily: 'sans-serif',
       padding: { x: 0, y: 0 },
@@ -89,10 +101,15 @@ export class GameMain extends BaseScene {
     }
     return size;
   }
+  createCaption() {
+    const b = this.captionBounding
+    this.textSize = this.calcTextSize([this.q!.ref], this.textWI, b.height);
+    this.add_text(b.centerX, b.centerY, {}, this.q!.ref.t, {})
+  }
   create(data: { sound: boolean, q: integer },) {
-    const { width, height } = this.sys.game.canvas
     this.q = Q[data.q] as QInfo
-    this.textSize = this.calcTextSize(this.q.body, this.textWI, height);
+    this.createCaption()
+    this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);
     this.tick = -0.5 * this.fps();
   }
   preload() {
@@ -101,9 +118,8 @@ export class GameMain extends BaseScene {
     const q = this.q
     const val = this.q!.body[ix]
     if (!q || !val) { return }
-    const { width, height } = this.sys.game.canvas
-    const lineH = height / q.body.length * 0.7
-    const y = height / q.body.length * (ix + 0.5);
+    const height = this.linesBounding.height
+    const y = height / q.body.length * (ix + 0.5) + this.linesBounding.top;
     const text = this.add_text(this.textC, y, {
       fontSize: `${this.textSize}px`,
       width: `${this.textW}px`,
