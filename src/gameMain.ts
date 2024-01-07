@@ -9,7 +9,6 @@ interface Range {
 
 interface QLine {
   t: string
-  s: "title" | undefined
   range: Range | undefined
 }
 interface QRef {
@@ -25,19 +24,57 @@ const LinePerSec = 1 / 2
 
 class Line {
   tick: number
-  timer: Phaser.GameObjects.Text
+  timer: Phaser.GameObjects.Text | null
   text: Phaser.GameObjects.Text
-  constructor(tick: number, timer: Phaser.GameObjects.Text, text: Phaser.GameObjects.Text) {
+  constructor(tick: number, timer: Phaser.GameObjects.Text | null, text: Phaser.GameObjects.Text) {
     this.tick = tick
     this.timer = timer
     this.text = text
   }
 }
 
+type Phase = TryingPhase | PraisePhase | FailedPhase;
+
+class BasePhase {
+  scene: GameMain
+  constructor(scene: GameMain) {
+    this.scene = scene
+  }
+}
+
+class TryingPhase extends BasePhase {
+  update() {
+    const prevLine = this.scene.tick / this.scene.fps() * LinePerSec
+    ++this.scene.tick;
+    const curLine = this.scene.tick / this.scene.fps() * LinePerSec
+    if (prevLine != curLine) {
+      this.scene.showLine(curLine, true);
+    }
+    this.scene.updateTimers()
+  }
+}
+
+class GameEndPhase extends BasePhase {
+  constructor(scene: GameMain) {
+    super(scene)
+    scene.onGameEnd()
+  }
+}
+
+class PraisePhase extends GameEndPhase {
+  update() { }
+}
+class FailedPhase extends GameEndPhase {
+  update() { }
+}
+
 export class GameMain extends BaseScene {
   q: QInfo | undefined
   tick: number = -1
   textSize: number = 0
+  phase: Phase
+  caption: Phaser.GameObjects.Text | undefined
+
   get timerRight(): number {
     const w = this.sys.game.canvas.width
     return w / 7;
@@ -83,6 +120,7 @@ export class GameMain extends BaseScene {
   lines: Line[] = []
   constructor() {
     super("GameMain");
+    this.phase = new TryingPhase(this)
   }
   calcTextSize(lines: QLine[] | QRef[], w: number, h: number): number {
     const s = {
@@ -101,10 +139,30 @@ export class GameMain extends BaseScene {
     }
     return size;
   }
+  setCaptionLink() {
+    if (!this.caption) { return }
+    this.caption.on("pointerdown", () => {
+      const url = this.q?.ref.url;
+      if (url) {
+        this.setLocation(url)
+      }
+    }).setInteractive()
+  }
+
+  onGameEnd() {
+    this.setCaptionLink()
+    this.showAllLines()
+  }
+
+  showAllLines() {
+    for (let ix = this.lines.length; ix < this.q!.body.length; ++ix) {
+      this.showLine(ix, false);
+    }
+  }
   createCaption() {
     const b = this.captionBounding
     this.textSize = this.calcTextSize([this.q!.ref], this.textWI, b.height);
-    this.add_text(b.centerX, b.centerY, {}, this.q!.ref.t, {})
+    this.caption = this.add_text(b.centerX, b.centerY, {}, this.q!.ref.t, {})
   }
   create(data: { sound: boolean, q: integer },) {
     this.q = Q[data.q] as QInfo
@@ -114,7 +172,7 @@ export class GameMain extends BaseScene {
   }
   preload() {
   }
-  showLine(ix: integer) {
+  showLine(ix: integer, addTimer: boolean) {
     const q = this.q
     const val = this.q!.body[ix]
     if (!q || !val) { return }
@@ -129,17 +187,23 @@ export class GameMain extends BaseScene {
     text.on("pointerdown", () => {
       this.clicked(ix);
     }).setInteractive();
-    const timer = this.add_text(this.timerC, y, {
-      fontSize: "19px",
-      fontFamily: "monospace",
-      width: `${this.timerW}px`,
-      fixedWidth: this.timerW,
-      align: "right",
-    }, "012:34", {});
+    const timer =
+      addTimer ? this.add_text(this.timerC, y, {
+        fontSize: "19px",
+        fontFamily: "monospace",
+        width: `${this.timerW}px`,
+        fixedWidth: this.timerW,
+        align: "right",
+      }, "", {}) : null
     this.lines[ix] = new Line(this.tick, timer, text)
   }
   clicked(ix: integer) {
-    console.log({ clicked: ix })
+    const line = this.q?.body[ix];
+    if (line && line.range) {
+      this.phase = new PraisePhase(this)
+    } else {
+      this.phase = new FailedPhase(this)
+    }
   }
   updateTimers() {
     for (const line of this.lines) {
@@ -147,16 +211,10 @@ export class GameMain extends BaseScene {
       const frac = t % 100
       const sec = (t - frac) / 100
       const fracS = `00${frac}`.slice(-2)
-      line.timer.setText(`${sec}.${fracS}`)
+      line.timer?.setText(`${sec}.${fracS}`)
     }
   }
   update(t: number, d: number) {
-    const prevLine = this.tick / this.fps() * LinePerSec
-    ++this.tick;
-    const curLine = this.tick / this.fps() * LinePerSec
-    if (prevLine != curLine) {
-      this.showLine(curLine);
-    }
-    this.updateTimers()
+    this.phase.update()
   }
 }

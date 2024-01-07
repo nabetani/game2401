@@ -1,6 +1,12 @@
 import * as Phaser from 'phaser';
 
 export class BaseScene extends Phaser.Scene {
+  setLocation(url: string) {
+    if (!window.open(url)) {
+      location.href = url;
+    }
+  }
+
   fps(): number { return this.game.config.fps.target!; }
   add_text(x: number, y: number, style: { [key: string]: string | number }, msg: string, events: { [key: string]: (() => void) }): Phaser.GameObjects.Text {
     const s = {

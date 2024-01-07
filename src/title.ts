@@ -20,7 +20,7 @@ export class Title extends BaseScene {
       ["タイッツー #" + tag, "https://taittsuu.com/search/taiitsus/hashtags?query=" + tag],
     ].forEach((e, ix) => {
       const text = this.add_text(500, y, {}, e[0],
-        { pointerdown: () => { window.location.href = e[1]; } });
+        { pointerdown: () => { this.setLocation(e[1]) } });
       text.setOrigin(1, 1);
       y = text.getBounds().top - 10;
     });
