@@ -3,6 +3,7 @@ import { BaseScene } from './baseScene';
 
 export class Title extends BaseScene {
   soundOn: boolean = false;
+  constructor() { super("Title") }
   preload() {
     this.load.image("title", "assets/title.webp");
   }

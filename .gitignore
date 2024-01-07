@@ -133,3 +133,4 @@ dist
 **/.DS_Store
 materials/*.png
 materials/title/title.webp
+materials/venv
