@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 
 export class BaseScene extends Phaser.Scene {
-  add_text(x: number, y: number, style: { [key: string]: string }, msg: string, events: { [key: string]: (() => void) }): Phaser.GameObjects.Text {
+  add_text(x: number, y: number, style: { [key: string]: string | number }, msg: string, events: { [key: string]: (() => void) }): Phaser.GameObjects.Text {
     const s = {
       fontFamily: 'sans-serif',
       color: "black",
