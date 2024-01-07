@@ -125,6 +125,15 @@ export class GameMain extends BaseScene {
   clicked(ix: integer) {
     console.log({ clicked: ix })
   }
+  updateTimers() {
+    for (const line of this.lines) {
+      const t = Math.round((this.tick - line.tick) / this.fps() * 100)
+      const frac = t % 100
+      const sec = (t - frac) / 100
+      const fracS = `00${frac}`.slice(-2)
+      line.timer.setText(`${sec}.${fracS}`)
+    }
+  }
   update(t: number, d: number) {
     const prevLine = this.tick / this.fps() * LinePerSec
     ++this.tick;
@@ -132,5 +141,6 @@ export class GameMain extends BaseScene {
     if (prevLine != curLine) {
       this.showLine(curLine);
     }
+    this.updateTimers()
   }
 }
