@@ -163,9 +163,12 @@ export class GameMain extends BaseScene {
         const padding = (ix == 0
           ? { left: 3, y: 3, right: 0 }
           : { x: 0, y: 3 })
-        const s = { ...this.lineStyle, fixedWidth: 0, padding: padding };
-        const p = this.add_text(x, b.top, s, text, {});
-        p.setOrigin(0, 0);
+        const strong = (ix == 1
+          ? { color: "red", stroke: "white", strokeThickness: 4 }
+          : {})
+        const s = { ...this.lineStyle, fixedWidth: 0, padding: padding, ...strong };
+        const p = this.add_text(x, b.centerY, s, text, {});
+        p.setOrigin(0, 0.5);
         x = p.getBounds().right;
       });
       return;
