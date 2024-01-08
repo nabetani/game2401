@@ -147,6 +147,29 @@ export class GameMain extends BaseScene {
   onGameEnd() {
     this.setCaptionLink()
     this.showAllLines()
+    this.showAnswer()
+  }
+
+  showAnswer() {
+    for (let ix = 0; ix < this.q!.body.length; ++ix) {
+      const q = this.q!.body[ix]!;
+      if (q.t.length < 2) { continue }
+      const text = this.lines[ix].text;
+      const b = text.getBounds();
+      console.log({ "text.style": text.style })
+      let x = b.left
+      text.destroy();
+      q.t.forEach((text, ix) => {
+        const padding = (ix == 0
+          ? { left: 3, y: 3, right: 0 }
+          : { x: 0, y: 3 })
+        const s = { ...this.lineStyle, fixedWidth: 0, padding: padding };
+        const p = this.add_text(x, b.top, s, text, {});
+        p.setOrigin(0, 0);
+        x = p.getBounds().right;
+      });
+      return;
+    }
   }
 
   showAllLines() {
@@ -167,18 +190,21 @@ export class GameMain extends BaseScene {
   }
   preload() {
   }
+  get lineStyle(): { [key: string]: string | number } {
+    return {
+      fontSize: `${this.textSize}px`,
+      width: `${this.textW}px`,
+      fixedWidth: this.textW,
+      align: "left",
+    }
+  }
   showLine(ix: integer, addTimer: boolean) {
     const q = this.q
     const val = this.q!.body[ix]
     if (!q || !val) { return }
     const height = this.linesBounding.height
     const y = height / q.body.length * (ix + 0.5) + this.linesBounding.top;
-    const text = this.add_text(this.textC, y, {
-      fontSize: `${this.textSize}px`,
-      width: `${this.textW}px`,
-      fixedWidth: this.textW,
-      align: "left",
-    }, val.t.join(""), {});
+    const text = this.add_text(this.textC, y, this.lineStyle, val.t.join(""), {});
     text.on("pointerdown", () => {
       this.clicked(ix);
     }).setInteractive();
@@ -186,7 +212,6 @@ export class GameMain extends BaseScene {
       addTimer ? this.add_text(this.timerC, y, {
         fontSize: "19px",
         fontFamily: "monospace",
-        width: `${this.timerW}px`,
         fixedWidth: this.timerW,
         align: "right",
       }, "", {}) : null
