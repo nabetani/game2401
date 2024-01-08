@@ -2,14 +2,8 @@ import * as Phaser from 'phaser';
 import { BaseScene } from './baseScene';
 import { Q } from './q.json'
 
-interface Range {
-  start: integer,
-  len: integer,
-}
-
 interface QLine {
-  t: string
-  range: Range | undefined
+  t: string[]
 }
 interface QRef {
   url: string | undefined
@@ -131,7 +125,8 @@ export class GameMain extends BaseScene {
     let size = 100;
     const maxH = h / lines.length * 0.7;
     for (const line of lines) {
-      const t = this.add.text(0, -1000, line.t, s);
+      const str = typeof (line.t) === "string" ? line.t : line.t.join("");
+      const t = this.add.text(0, -1000, str, s);
       const aw = t.getBounds().width;
       const ah = t.getBounds().height;
       size = Math.min(size, 10 * w / aw, 10 * maxH / ah);
@@ -183,7 +178,7 @@ export class GameMain extends BaseScene {
       width: `${this.textW}px`,
       fixedWidth: this.textW,
       align: "left",
-    }, val.t, {});
+    }, val.t.join(""), {});
     text.on("pointerdown", () => {
       this.clicked(ix);
     }).setInteractive();
@@ -199,7 +194,7 @@ export class GameMain extends BaseScene {
   }
   clicked(ix: integer) {
     const line = this.q?.body[ix];
-    if (line && line.range) {
+    if (line && 1 < line.t.length) {
       this.phase = new PraisePhase(this)
     } else {
       this.phase = new FailedPhase(this)
