@@ -14,7 +14,7 @@ def canbe_head(s)
   case s
   when /[\p{Terminal_Punctuation}\p{Close_Punctuation}\p{Final_Punctuation}]/; false # 閉じ括弧等
   when /[\-\.\,\!\?\:\;\p{Terminal_Punctuation}\p{Close_Punctuation}\p{Final_Punctuation}]/; false # 句読点等
-  when /[ゃゅょっー]/; false
+  when /[ャュョッァィゥェォゃゅょっぁぃぅぇぉヵヶゝゞ々ヾー゛゜]/; false
   else; true
   end
 end
