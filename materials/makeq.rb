@@ -1,6 +1,7 @@
 require "json"
+require "digest/sha2"
 
-HERE = File.split(__FILE__).first
+HERE = File.absolute_path(File.split(__FILE__).first)
 
 LEN=16
 
@@ -24,6 +25,26 @@ def canbe_tail(s)
   when /[\p{Initial_Punctuation}\p{Open_Punctuation}]/; false # 開き括弧等
   else; true
   end
+end
+
+LINE_COUNT = 15
+
+def sample_num(min, max, seed)
+  s = Digest::SHA2.new.then{ _1<<seed.to_json;Integer(_1.hexdigest,16) }
+  min + s % (max-min+1)
+end
+
+def select_q(lines)
+  ix = lines.index{ |x| 1<x[:t].size }
+  post = lines.size-ix-1
+  pre_min = (LINE_COUNT-post-1).clamp(2,LINE_COUNT-3)
+  pre_max = ix.clamp(3,LINE_COUNT-2)
+  pre = sample_num(pre_min,pre_max,lines[0])
+  [
+    *lines[ix-pre, pre],
+    lines[ix],
+    *lines[ix+1,LINE_COUNT-pre-1]
+  ]
 end
 
 def split_text( s0, first, last )
@@ -50,7 +71,7 @@ def split_text( s0, first, last )
       s = s.drop(x)
       consumed += x
     end
-    return lines if ok
+    return select_q(lines) if ok
   end
 end
 
@@ -67,16 +88,21 @@ end
 def build(s)
   ref_text = /^text\s*\:\s*([^\r\n]+)/.match(s)[1].gsub( '\n', "\n")
   url = /^url\s*\:\s*([^\r\n]+)/.match(s)&.[](1)
-  ref={text:ref_text}
+  ref={t:ref_text}
   ref[:url] = url if url
   {ref:ref, body:get_text(s.split(/^\-{3,}$/).last)}
 end
 
 def main
-  q=Dir.glob( File.join(HERE, "cropped_texts/*.txt")).map{ |fn|
+  q=Dir.glob( File.join(HERE, "cropped_texts/*.txt")).sort.map{ |fn|
     build(File.open(fn, &:read))
   }
-  puts JSON.pretty_generate(q)
+  File.open(File.join(HERE,"../src/q.json"), "w") do |f|
+    pp q
+    f.puts( JSON.pretty_generate({Q:q}))
+  end
 end
 
-main
+Dir.chdir( HERE ) do
+  main
+end
