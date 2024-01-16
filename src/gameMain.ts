@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { BaseScene } from './baseScene';
-import { Q } from './q.json'
+import qlist from './q.json'
 
 interface QLine {
   t: string[]
@@ -186,7 +186,7 @@ export class GameMain extends BaseScene {
     this.caption = this.add_text(b.centerX, b.centerY, {}, this.q!.ref.t, {})
   }
   create(data: { sound: boolean, q: integer },) {
-    this.q = Q[data.q] as QInfo
+    this.q = qlist.Q[data.q] as QInfo
     this.createCaption()
     this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);
     this.tick = -0.5 * this.fps();

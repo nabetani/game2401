@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "strict": true,
-    "target": "es5", // ES5準拠のコードを出力
+    "allowSyntheticDefaultImports": true,
+    "target": "es2018",
     "resolveJsonModule": true,
     "moduleResolution": "node" // node方式のモジュール解決方法（node_modulesを探索）
   }
