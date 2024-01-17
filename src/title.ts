@@ -8,7 +8,7 @@ export class Title extends BaseScene {
     this.load.image("title", "assets/title.webp");
   }
   startClicked() {
-    this.scene.start('GameMain', { soundOn: this.soundOn, q: 0 });
+    this.scene.start('GameMain', { soundOn: this.soundOn, q: 2 });
   }
   addLinks() {
     const tag = "tbd";

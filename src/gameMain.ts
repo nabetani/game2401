@@ -16,6 +16,12 @@ interface QInfo {
 
 const LinePerSec = 1 / 2
 
+const depth = {
+  "bg": 0,
+  "text": 10,
+  "emp": 11,
+};
+
 class Line {
   tick: number
   timer: Phaser.GameObjects.Text | null
@@ -68,6 +74,7 @@ export class GameMain extends BaseScene {
   textSize: number = 0
   phase: Phase
   caption: Phaser.GameObjects.Text | undefined
+  graphics: Phaser.GameObjects.Graphics | undefined
 
   get timerRight(): number {
     const w = this.sys.game.canvas.width
@@ -150,27 +157,61 @@ export class GameMain extends BaseScene {
     this.showAnswer()
   }
 
+  ansBBox(q: QLine, text: Phaser.GameObjects.Text): Phaser.Geom.Rectangle {
+    const b = text.getBounds();
+    let x = b.left
+    let r = new Phaser.Geom.Rectangle();
+    q.t.every((t, ix) => {
+      const padding = (ix == 0
+        ? { left: 3, y: 3, right: 0 }
+        : { x: 0, y: 3 })
+      const s = { ...this.lineStyle, fixedWidth: 0, padding: padding };
+      const p = this.add_text(x, b.centerY, s, t, {});
+      p.setOrigin(0, 0.5);
+      if (ix == 1) {
+        r = p.getBounds();
+        p.destroy();
+        return false; // break
+      }
+      x = p.getBounds().right;
+      p.destroy();
+      return true; // continue
+    });
+    return r;
+  }
+
+  emphasize(bbox: Phaser.Geom.Rectangle, r: number) {
+    const g = this.graphics!;
+    g.clear();
+    const c = new Phaser.Geom.Point(bbox.centerX, bbox.centerY);
+    const d = bbox.width / 3;
+    const N = 40;
+    console.log({ c: c, d: d, bbox: bbox });
+    const h = this.sys.game.canvas.height;
+    g.fillStyle(0xff0000, 0.5);
+    // g.fillRect(bbox.left, bbox.top, bbox.width, bbox.height);
+    const dt = Math.PI * 2 / N / 4
+    for (let i = 0; i < N; ++i) {
+      const t = i * Math.PI * 2 / N;
+      const x0 = Math.cos(t) * d + c.x;
+      const y0 = Math.sin(t) * d + c.y;
+      const x1 = Math.cos(t + dt) * h + c.x;
+      const y1 = Math.sin(t + dt) * h + c.y;
+      const x2 = Math.cos(t - dt) * h + c.x;
+      const y2 = Math.sin(t - dt) * h + c.y;
+      g.fillTriangle(x0, y0, x1, y1, x2, y2);
+    }
+  }
+
   showAnswer() {
     for (let ix = 0; ix < this.q!.body.length; ++ix) {
       const q = this.q!.body[ix]!;
       if (q.t.length < 2) { continue }
       const text = this.lines[ix].text;
-      const b = text.getBounds();
+      const bbox = this.ansBBox(q, text);
+      console.log({ bbox: JSON.stringify(bbox) });
+      this.emphasize(bbox, 1);
       console.log({ "text.style": text.style })
-      let x = b.left
-      text.destroy();
-      q.t.forEach((text, ix) => {
-        const padding = (ix == 0
-          ? { left: 3, y: 3, right: 0 }
-          : { x: 0, y: 3 })
-        const strong = (ix == 1
-          ? { color: "red", stroke: "white", strokeThickness: 4 }
-          : {})
-        const s = { ...this.lineStyle, fixedWidth: 0, padding: padding, ...strong };
-        const p = this.add_text(x, b.centerY, s, text, {});
-        p.setOrigin(0, 0.5);
-        x = p.getBounds().right;
-      });
       return;
     }
   }
@@ -186,6 +227,8 @@ export class GameMain extends BaseScene {
     this.caption = this.add_text(b.centerX, b.centerY, {}, this.q!.ref.t, {})
   }
   create(data: { sound: boolean, q: integer },) {
+    this.graphics = this.add.graphics();
+    this.graphics.setDepth(depth.emp);
     this.q = qlist.Q[data.q] as QInfo
     this.createCaption()
     this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);
