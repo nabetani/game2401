@@ -60,6 +60,12 @@ const randnum = (i: integer, lo: number, hi: number): number => {
   return lo + (hi - lo) * v;
 }
 
+const sincos_r = (t: number, r: number = 1, delta: { x: number, y: number } = { x: 0, y: 0 }): [number, number] => {
+  const s = Math.sin(t);
+  const c = Math.cos(t);
+  return [r * s + delta.y, r * c + delta.x];
+}
+
 class TryingPhase extends BasePhase {
   update() {
     const prevLine = this.scene.tick / this.scene.fps() * LinePerSec
@@ -217,12 +223,9 @@ export class GameMain extends BaseScene {
       const t = (i + randnum(i + N * 2, 0, 0.7) + r * 4) * Math.PI * 2 / N;
       const d = randnum(i, 0.5, 2) * d0
       const dt = Math.PI * 2 / N * randnum(i + N, 0.05, 0.2);
-      const x0 = Math.cos(t) * d + c.x;
-      const y0 = Math.sin(t) * d + c.y;
-      const x1 = Math.cos(t + dt) * h + c.x;
-      const y1 = Math.sin(t + dt) * h + c.y;
-      const x2 = Math.cos(t - dt) * h + c.x;
-      const y2 = Math.sin(t - dt) * h + c.y;
+      const [y0, x0] = sincos_r(t, d, c);
+      const [y1, x1] = sincos_r(t + dt, h, c);
+      const [y2, x2] = sincos_r(t - dt, h, c);
       g.fillTriangle(x0, y0, x1, y1, x2, y2);
     }
   }
