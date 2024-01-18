@@ -82,7 +82,6 @@ class GameEndPhase extends BasePhase {
   tick: number = 0;
   constructor(scene: GameMain) {
     super(scene)
-    scene.onGameEnd()
   }
   update() {
     ++this.tick;
@@ -91,8 +90,16 @@ class GameEndPhase extends BasePhase {
 }
 
 class PraisePhase extends GameEndPhase {
+  constructor(scene: GameMain) {
+    super(scene)
+    scene.onGameEnd(true)
+  }
 }
 class FailedPhase extends GameEndPhase {
+  constructor(scene: GameMain) {
+    super(scene)
+    scene.onGameEnd(false)
+  }
 }
 
 export class GameMain extends BaseScene {
@@ -103,6 +110,7 @@ export class GameMain extends BaseScene {
   ansBBox: Phaser.Geom.Rectangle | undefined
   caption: Phaser.GameObjects.Text | undefined
   graphics: Phaser.GameObjects.Graphics | undefined
+  ansCol: integer = 0;
 
   get timerRight(): number {
     const w = this.sys.game.canvas.width
@@ -179,7 +187,8 @@ export class GameMain extends BaseScene {
     }).setInteractive()
   }
 
-  onGameEnd() {
+  onGameEnd(win: boolean) {
+    this.ansCol = win ? 0x33ff33 : 0xff0000;
     this.setCaptionLink();
     this.showAllLines();
     this.ansBBox = this.getAnsBBox();
@@ -217,7 +226,7 @@ export class GameMain extends BaseScene {
     const N = 40;
     console.log({ c: c, d: d0, bbox: bbox });
     const h = this.sys.game.canvas.height;
-    g.fillStyle(0xff0000, 0.5);
+    g.fillStyle(this.ansCol, 0.5);
     // g.fillRect(bbox.left, bbox.top, bbox.width, bbox.height);
     for (let i = 0; i < N; ++i) {
       const t = (i + randnum(i + N * 2, 0, 0.7) + r * 4) * Math.PI * 2 / N;
