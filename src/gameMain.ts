@@ -42,6 +42,24 @@ class BasePhase {
   }
 }
 
+const hasher = (s: integer): integer => {
+  const mask = (1 << 30) - 1;
+  const rot = (a: number, b: number): number => {
+    return ((a << b) | (a >>> (32 - b))) & mask;
+  };
+  for (let x = 0; x < 3; ++x) {
+    s &= mask;
+    s = mask & (rot(s ^ 1063544335, 7) * 255571 + rot(s ^ 937800482, 13) * 133801) + 74053032;
+  }
+  return s / (1 + mask);
+}
+
+const randnum = (i: integer, lo: number, hi: number): number => {
+  const v = hasher(i);
+  console.log({ i: i, v: v });
+  return lo + (hi - lo) * v;
+}
+
 class TryingPhase extends BasePhase {
   update() {
     const prevLine = this.scene.tick / this.scene.fps() * LinePerSec
@@ -55,17 +73,20 @@ class TryingPhase extends BasePhase {
 }
 
 class GameEndPhase extends BasePhase {
+  tick: number = 0;
   constructor(scene: GameMain) {
     super(scene)
     scene.onGameEnd()
   }
+  update() {
+    ++this.tick;
+    this.scene.emphasize(this.tick / this.scene.fps());
+  }
 }
 
 class PraisePhase extends GameEndPhase {
-  update() { }
 }
 class FailedPhase extends GameEndPhase {
-  update() { }
 }
 
 export class GameMain extends BaseScene {
@@ -73,6 +94,7 @@ export class GameMain extends BaseScene {
   tick: number = -1
   textSize: number = 0
   phase: Phase
+  ansBBox: Phaser.Geom.Rectangle | undefined
   caption: Phaser.GameObjects.Text | undefined
   graphics: Phaser.GameObjects.Graphics | undefined
 
@@ -152,12 +174,12 @@ export class GameMain extends BaseScene {
   }
 
   onGameEnd() {
-    this.setCaptionLink()
-    this.showAllLines()
-    this.showAnswer()
+    this.setCaptionLink();
+    this.showAllLines();
+    this.ansBBox = this.getAnsBBox();
   }
 
-  ansBBox(q: QLine, text: Phaser.GameObjects.Text): Phaser.Geom.Rectangle {
+  getAnsBBoxAtLine(q: QLine, text: Phaser.GameObjects.Text): Phaser.Geom.Rectangle {
     const b = text.getBounds();
     let x = b.left
     let r = new Phaser.Geom.Rectangle();
@@ -180,19 +202,21 @@ export class GameMain extends BaseScene {
     return r;
   }
 
-  emphasize(bbox: Phaser.Geom.Rectangle, r: number) {
+  emphasize(r: number) {
+    const bbox = this.ansBBox!;
     const g = this.graphics!;
     g.clear();
     const c = new Phaser.Geom.Point(bbox.centerX, bbox.centerY);
-    const d = bbox.width / 3;
+    const d0 = bbox.width / 3 + 400 * Math.max(0, 1 - r * 2);
     const N = 40;
-    console.log({ c: c, d: d, bbox: bbox });
+    console.log({ c: c, d: d0, bbox: bbox });
     const h = this.sys.game.canvas.height;
     g.fillStyle(0xff0000, 0.5);
     // g.fillRect(bbox.left, bbox.top, bbox.width, bbox.height);
-    const dt = Math.PI * 2 / N / 4
     for (let i = 0; i < N; ++i) {
-      const t = i * Math.PI * 2 / N;
+      const t = (i + randnum(i + N * 2, 0, 0.7) + r * 4) * Math.PI * 2 / N;
+      const d = randnum(i, 0.5, 2) * d0
+      const dt = Math.PI * 2 / N * randnum(i + N, 0.05, 0.2);
       const x0 = Math.cos(t) * d + c.x;
       const y0 = Math.sin(t) * d + c.y;
       const x1 = Math.cos(t + dt) * h + c.x;
@@ -203,17 +227,14 @@ export class GameMain extends BaseScene {
     }
   }
 
-  showAnswer() {
+  getAnsBBox(): Phaser.Geom.Rectangle | undefined {
     for (let ix = 0; ix < this.q!.body.length; ++ix) {
       const q = this.q!.body[ix]!;
       if (q.t.length < 2) { continue }
       const text = this.lines[ix].text;
-      const bbox = this.ansBBox(q, text);
-      console.log({ bbox: JSON.stringify(bbox) });
-      this.emphasize(bbox, 1);
-      console.log({ "text.style": text.style })
-      return;
+      return this.getAnsBBoxAtLine(q, text);
     }
+    throw new Error("unexpected");
   }
 
   showAllLines() {
