@@ -17,28 +17,39 @@ interface QInfo {
 const LinePerSec = 1 / 2
 
 const GRWon = {
-  t: "won",
   c: 0x33ff33,
+  text: (t: string | undefined): string => {
+    return `勝利!\n${t}秒`;
+  },
+  borderCol: 0x00ff44,
 };
 const GRFailed = {
-  t: "failed",
   c: 0xff0000,
+  text: (t: string | undefined): string => {
+    return "敗北!";
+  },
+  borderCol: 0xaa0000,
 };
 const GRGaveUp = {
-  t: "gave up",
   c: 0xff0000,
+  text: (t: string | undefined): string => {
+    return "よく頑張ったね";
+  },
+  borderCol: 0xaa00ff,
 };
 
 interface GameResultType {
-  t: string
   c: integer
+  text: (t: string | undefined) => string;
+  borderCol: integer;
 };
 
 const depth = {
   "bg": 0,
   "text": 10,
   "emp": 11,
-  "result": 12,
+  "resultBase": 100,
+  "result": 101,
 };
 
 class Line {
@@ -129,6 +140,8 @@ export class GameMain extends BaseScene {
   ansBBox: Phaser.Geom.Rectangle | undefined
   caption: Phaser.GameObjects.Text | undefined
   graphics: Phaser.GameObjects.Graphics | undefined
+  resBase: Phaser.GameObjects.Graphics | undefined
+
   ansCol: integer = 0;
 
   get timerRight(): number {
@@ -210,10 +223,26 @@ export class GameMain extends BaseScene {
     this.ansCol = gr.c;
     this.setCaptionLink();
     this.showAllLines();
-    this.ansBBox = this.getAnsBBox();
+    const [bb, resTick] = this.getAnsBBox();
+    this.ansBBox = bb;
     const h = this.sys.game.canvas.height;
     const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
-    const text = this.add_text(this.sys.game.canvas.width / 2, ty, {}, gr.t, {});
+    const text = this.add_text(this.sys.game.canvas.width / 2, ty, {
+      fontSize: "80px",
+      align: "center",
+      backgroundColor: "#0000",
+    }, gr.text(resTick), {});
+    text.setDepth(depth.result);
+    const base = this.resBase!
+    const resBB = text.getBounds();
+    const g = 20;
+    const params: [number, number, number, number, number] =
+      [resBB.x - g, resBB.y - g, resBB.width + g * 2, resBB.height + g * 2, 30];
+    base.fillStyle(0xffffff);
+    base.fillRoundedRect(...params);
+    base.lineStyle(20, gr.borderCol, 1.0);
+    base.strokeRoundedRect(...params);
+    base.setDepth(depth.resultBase);
     for (const line of this.lines) {
       line.text.removeAllListeners();
     }
@@ -222,7 +251,7 @@ export class GameMain extends BaseScene {
   getAnsBBoxAtLine(q: QLine, text: Phaser.GameObjects.Text): Phaser.Geom.Rectangle {
     const b = text.getBounds();
     let x = b.left
-    let r = new Phaser.Geom.Rectangle();
+    let bb = new Phaser.Geom.Rectangle();
     q.t.every((t, ix) => {
       const padding = (ix == 0
         ? { left: 3, y: 3, right: 0 }
@@ -231,7 +260,7 @@ export class GameMain extends BaseScene {
       const p = this.add_text(x, b.centerY, s, t, {});
       p.setOrigin(0, 0.5);
       if (ix == 1) {
-        r = p.getBounds();
+        bb = p.getBounds();
         p.destroy();
         return false; // break
       }
@@ -239,7 +268,7 @@ export class GameMain extends BaseScene {
       p.destroy();
       return true; // continue
     });
-    return r;
+    return bb;
   }
 
   emphasize(t: number) {
@@ -249,7 +278,6 @@ export class GameMain extends BaseScene {
     const c = new Phaser.Geom.Point(bbox.centerX, bbox.centerY);
     const d0 = bbox.width / 3 + 400 * Math.max(0, 1 - t * 2);
     const N = 40;
-    console.log({ c: c, d: d0, bbox: bbox });
     const h = this.sys.game.canvas.height;
     g.fillStyle(this.ansCol, 0.5);
     // g.fillRect(bbox.left, bbox.top, bbox.width, bbox.height);
@@ -264,12 +292,13 @@ export class GameMain extends BaseScene {
     }
   }
 
-  getAnsBBox(): Phaser.Geom.Rectangle | undefined {
+  getAnsBBox(): [Phaser.Geom.Rectangle | undefined, string?] {
     for (let ix = 0; ix < this.q!.body.length; ++ix) {
       const q = this.q!.body[ix]!;
       if (q.t.length < 2) { continue }
-      const text = this.lines[ix].text;
-      return this.getAnsBBoxAtLine(q, text);
+      const line = this.lines[ix];
+      const text = line.text;
+      return [this.getAnsBBoxAtLine(q, text), line.timer?.text];
     }
     throw new Error("unexpected");
   }
@@ -286,6 +315,7 @@ export class GameMain extends BaseScene {
   }
   create(data: { sound: boolean, q: integer },) {
     this.graphics = this.add.graphics();
+    this.resBase = this.add.graphics();
     this.graphics.setDepth(depth.emp);
     this.q = qlist.Q[data.q] as QInfo
     this.createCaption()
