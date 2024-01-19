@@ -16,10 +16,29 @@ interface QInfo {
 
 const LinePerSec = 1 / 2
 
+const GRWon = {
+  t: "won",
+  c: 0x33ff33,
+};
+const GRFailed = {
+  t: "failed",
+  c: 0xff0000,
+};
+const GRGaveUp = {
+  t: "gave up",
+  c: 0xff0000,
+};
+
+interface GameResultType {
+  t: string
+  c: integer
+};
+
 const depth = {
   "bg": 0,
   "text": 10,
   "emp": 11,
+  "result": 12,
 };
 
 class Line {
@@ -92,13 +111,13 @@ class GameEndPhase extends BasePhase {
 class PraisePhase extends GameEndPhase {
   constructor(scene: GameMain) {
     super(scene)
-    scene.onGameEnd(true)
+    scene.onGameEnd(GRWon)
   }
 }
 class FailedPhase extends GameEndPhase {
   constructor(scene: GameMain) {
     super(scene)
-    scene.onGameEnd(false)
+    scene.onGameEnd(GRFailed)
   }
 }
 
@@ -187,11 +206,14 @@ export class GameMain extends BaseScene {
     }).setInteractive()
   }
 
-  onGameEnd(win: boolean) {
-    this.ansCol = win ? 0x33ff33 : 0xff0000;
+  onGameEnd(gr: GameResultType) {
+    this.ansCol = gr.c;
     this.setCaptionLink();
     this.showAllLines();
     this.ansBBox = this.getAnsBBox();
+    const h = this.sys.game.canvas.height;
+    const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
+    const text = this.add_text(this.sys.game.canvas.width / 2, ty, {}, gr.t, {});
   }
 
   getAnsBBoxAtLine(q: QLine, text: Phaser.GameObjects.Text): Phaser.Geom.Rectangle {
