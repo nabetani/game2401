@@ -73,10 +73,10 @@ const hasher = (s: integer): integer => {
   return s / (1 + mask);
 }
 
-const randnum = (i: integer, lo: number, hi: number): number => {
-  const v = hasher(i);
-  console.log({ i: i, v: v });
-  return lo + (hi - lo) * v;
+const randnum = (t: number, i: integer, lo: number, hi: number): number => {
+  const a = (hasher(i ^ 1234) + 8) * 2;
+  const b = hasher(i) * (2 * Math.PI);
+  return (lo + hi) / 2 + (hi - lo) / 2 * Math.sin(t * a + b);
 }
 
 const sincos_r = (t: number, r: number = 1, delta: { x: number, y: number } = { x: 0, y: 0 }): [number, number] => {
@@ -239,24 +239,24 @@ export class GameMain extends BaseScene {
     return r;
   }
 
-  emphasize(r: number) {
+  emphasize(t: number) {
     const bbox = this.ansBBox!;
     const g = this.graphics!;
     g.clear();
     const c = new Phaser.Geom.Point(bbox.centerX, bbox.centerY);
-    const d0 = bbox.width / 3 + 400 * Math.max(0, 1 - r * 2);
+    const d0 = bbox.width / 3 + 400 * Math.max(0, 1 - t * 2);
     const N = 40;
     console.log({ c: c, d: d0, bbox: bbox });
     const h = this.sys.game.canvas.height;
     g.fillStyle(this.ansCol, 0.5);
     // g.fillRect(bbox.left, bbox.top, bbox.width, bbox.height);
     for (let i = 0; i < N; ++i) {
-      const t = (i + randnum(i + N * 2, 0, 0.7) + r * 4) * Math.PI * 2 / N;
-      const d = randnum(i, 0.5, 2) * d0
-      const dt = Math.PI * 2 / N * randnum(i + N, 0.05, 0.2);
-      const [y0, x0] = sincos_r(t, d, c);
-      const [y1, x1] = sincos_r(t + dt, h, c);
-      const [y2, x2] = sincos_r(t - dt, h, c);
+      const th = (i + randnum(t, i + N * 2, 0, 0.7) + t * 4) * Math.PI * 2 / N;
+      const d = randnum(t, i, 0.5, 2) * d0
+      const dt = Math.PI * 2 / N * randnum(t, i + N, 0.05, 0.2);
+      const [y0, x0] = sincos_r(th, d, c);
+      const [y1, x1] = sincos_r(th + dt, h, c);
+      const [y2, x2] = sincos_r(th - dt, h, c);
       g.fillTriangle(x0, y0, x1, y1, x2, y2);
     }
   }
