@@ -214,6 +214,9 @@ export class GameMain extends BaseScene {
     const h = this.sys.game.canvas.height;
     const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
     const text = this.add_text(this.sys.game.canvas.width / 2, ty, {}, gr.t, {});
+    for (const line of this.lines) {
+      line.text.removeAllListeners();
+    }
   }
 
   getAnsBBoxAtLine(q: QLine, text: Phaser.GameObjects.Text): Phaser.Geom.Rectangle {
