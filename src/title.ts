@@ -1,33 +1,11 @@
 import * as Phaser from 'phaser';
+import { WStorage } from './wstorage';
 import { BaseScene } from './baseScene';
 
-// Array.new(25){[*?a..?z,*?A..?Z,*0..9].sample}.join+"."
-const APP_WS_ID = "0gjpKhzYK28hEzJQTThEfec5n."
-
-const storeWS = (name: string, key: string, val: any) => {
-  const s = localStorage;
-  const wsKey = APP_WS_ID + name;
-  const v = JSON.parse(s.getItem(wsKey) || "{}");
-  v[key] = val;
-  console.log(["storeWS", v]);
-  s.setItem(wsKey, JSON.stringify(v));
-}
-
-const readWS = <T>(name: string, key: string, fallback: T): T => {
-  const s = localStorage;
-  const wsKey = APP_WS_ID + name;
-  const v = JSON.parse(s.getItem(wsKey) || "{}");
-  console.log(["readWS", v]);
-  const r = v[key];
-  if (r === undefined) {
-    return fallback;
-  }
-  return r;
-}
 
 const T0 = new Date("2024-01-15T04:00:00+09:00").getTime();
 const TodayQ = Math.floor((new Date().getTime() - T0) / (24 * 60 * 60 * 1000));
-const TodayQPlayed = readWS<boolean>("played", `${TodayQ}`, false);
+const TodayQPlayed = WStorage.played(TodayQ);
 
 
 export class Title extends BaseScene {
@@ -36,12 +14,12 @@ export class Title extends BaseScene {
   preload() {
     this.load.image("title", "assets/title.webp");
   }
-  startClicked(q: number, practice: boolean) {
-    if (readWS<boolean>("played", `${q}`, false)) {
+  startClicked(q: integer, practice: boolean) {
+    if (WStorage.played(q)) {
       practice = true;
     }
     if (!practice) {
-      storeWS("played", `${q}`, true);
+      WStorage.setPlayed(q);
     }
     this.scene.start('GameMain', { soundOn: this.soundOn, q: q, practice: practice });
   }
@@ -79,7 +57,7 @@ export class Title extends BaseScene {
     this.addLinks();
   }
   todayResult(): string {
-    return readWS<string>("result", `${TodayQ}`, "記録なし");
+    return WStorage.result(TodayQ);
   }
   addTodayButton(): Phaser.GameObjects.Text {
     const { width, height } = this.sys.game.canvas;
