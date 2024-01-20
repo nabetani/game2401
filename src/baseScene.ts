@@ -9,12 +9,13 @@ export class BaseScene extends Phaser.Scene {
 
   fps(): number { return this.game.config.fps.target!; }
   add_text(x: number, y: number, style: Phaser.Types.GameObjects.Text.TextStyle, msg: string, events: { [key: string]: (() => void) }): Phaser.GameObjects.Text {
+    const bg = Object.keys(events).length == 0 ? "#fff0" : "#fffa";
     const s = {
       fontFamily: 'sans-serif',
       color: "black",
       padding: { x: 3, y: 3 },
       fontSize: "19px",
-      backgroundColor: "#fffa",
+      backgroundColor: bg,
       lineSpacing: 10,
       ...style
     };

@@ -345,6 +345,7 @@ export class GameMain extends BaseScene {
       fontSize: `${this.textSize}px`,
       width: `${this.textW}px`,
       fixedWidth: this.textW,
+      backgroundColor: "#fffa",
       align: "left",
     }
   }
@@ -363,6 +364,7 @@ export class GameMain extends BaseScene {
         fontSize: "19px",
         fontFamily: "monospace",
         fixedWidth: this.timerW,
+        backgroundColor: "#8f8a",
         align: "right",
       }, "", {}) : null
     this.lines[ix] = new Line(this.tick, timer, text)
