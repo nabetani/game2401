@@ -1,14 +1,17 @@
 import * as Phaser from 'phaser';
 import { BaseScene } from './baseScene';
 
+const T0 = new Date("2024-01-19T04:00:00+09:00").getTime();
+const TodayQ = Math.floor((new Date().getTime() - T0) / (24 * 60 * 60 * 1000));
+
 export class Title extends BaseScene {
   soundOn: boolean = false;
   constructor() { super("Title") }
   preload() {
     this.load.image("title", "assets/title.webp");
   }
-  startClicked() {
-    this.scene.start('GameMain', { soundOn: this.soundOn, q: 2 });
+  startClicked(q: number, practice: boolean) {
+    this.scene.start('GameMain', { soundOn: this.soundOn, q: q, practice: practice });
   }
   addLinks() {
     const tag = "tbd";
@@ -40,9 +43,25 @@ export class Title extends BaseScene {
     soundBtns.push(this.add_text(220, 30, soundStyle, 'Sound ON', { pointerdown: () => toggleSound(true) }));
     soundBtns.push(this.add_text(400, 30, soundStyle, 'Sound OFF', { pointerdown: () => toggleSound(false) }));
     toggleSound(false);
-    this.add_text(width / 2, height / 2, { fontSize: "35px" }, 'Click here to start game',
-      { pointerdown: () => this.startClicked() })
+    const todayBtn = (1 < TodayQ)
+      ? this.add_text(width / 2, height / 4, { fontSize: "65px" }, '今日の問題',
+        { pointerdown: () => this.startClicked(TodayQ, false) })
+      : this.add_text(width / 2, height / 4, { fontSize: "65px" }, ' 明日公開 ', {});
+    this.addStartButtons(todayBtn.getBounds());
     this.addLinks();
+  }
+  addStartButtons(rc: Phaser.Geom.Rectangle) {
+    const bw = rc.width * 0.45;
+    const bs = rc.width - bw;
+    for (let i = 0; i < 2; ++i) {
+      const x = rc.left + bw / 2 + bs * i
+      this.add_text(x, rc.bottom + 40, { fontSize: "25px" }, `練習問題 ${i + 1}`,
+        { pointerdown: () => this.startClicked(i, true) });
+      if (1 < TodayQ - i - 1) {
+        this.add_text(x, rc.bottom + 100, { fontSize: "25px" }, `${["昨日", "一昨日"][i]}の問題`,
+          { pointerdown: () => this.startClicked(TodayQ - i - 1, true) });
+      }
+    }
   }
 }
 
