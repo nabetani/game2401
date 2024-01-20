@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { BaseScene } from './baseScene';
 
-const T0 = new Date("2024-01-19T04:00:00+09:00").getTime();
+const T0 = new Date("2024-01-18T04:00:00+09:00").getTime();
 const TodayQ = Math.floor((new Date().getTime() - T0) / (24 * 60 * 60 * 1000));
 
 export class Title extends BaseScene {

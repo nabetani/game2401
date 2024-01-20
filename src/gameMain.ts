@@ -141,6 +141,7 @@ export class GameMain extends BaseScene {
   caption: Phaser.GameObjects.Text | undefined
   graphics: Phaser.GameObjects.Graphics | undefined
   resBase: Phaser.GameObjects.Graphics | undefined
+  practice: boolean = true;
 
   ansCol: integer = 0;
 
@@ -152,7 +153,7 @@ export class GameMain extends BaseScene {
     return 10
   }
   get timerW(): number {
-    return this.timerRight - this.timerLeft
+    return this.practice ? 0 : this.timerRight - this.timerLeft;
   }
   get timerC(): number {
     return this.timerLeft + this.timerW / 2
@@ -313,9 +314,10 @@ export class GameMain extends BaseScene {
     this.textSize = this.calcTextSize([this.q!.ref], this.textWI, b.height);
     this.caption = this.add_text(b.centerX, b.centerY, {}, this.q!.ref.t, {})
   }
-  create(data: { sound: boolean, q: integer },) {
+  create(data: { sound: boolean, q: integer, practice: boolean },) {
     this.graphics = this.add.graphics();
     this.resBase = this.add.graphics();
+    this.practice = data.practice;
     this.graphics.setDepth(depth.emp);
     this.q = qlist.Q[data.q] as QInfo
     this.createCaption()
@@ -343,7 +345,7 @@ export class GameMain extends BaseScene {
       this.clicked(ix);
     }).setInteractive();
     const timer =
-      addTimer ? this.add_text(this.timerC, y, {
+      (!this.practice && addTimer) ? this.add_text(this.timerC, y, {
         fontSize: "19px",
         fontFamily: "monospace",
         fixedWidth: this.timerW,
