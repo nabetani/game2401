@@ -1,9 +1,11 @@
 import * as Phaser from 'phaser';
 import { WStorage } from './wstorage';
 import { BaseScene } from './baseScene';
+import qlist from './q.json'
 
 
 const T0 = new Date("2024-01-15T04:00:00+09:00").getTime();
+// const T0 = new Date("2023-12-28T04:00:00+09:00").getTime();
 const TodayQ = Math.floor((new Date().getTime() - T0) / (24 * 60 * 60 * 1000));
 const TodayQPlayed = WStorage.played(TodayQ);
 
@@ -69,6 +71,9 @@ export class Title extends BaseScene {
       const bb = b.getBounds();
       return this.add_text(width / 2, bb.bottom + 50, { fontSize: "30px" }, this.todayResult(), {});
     }
+    if (qlist.Q.length <= TodayQ) {
+      return this.add_text(width / 2, height / 4, { fontSize: "40px" }, '問題の在庫切れ', {});
+    }
     return this.add_text(width / 2, height / 4, { fontSize: "65px" }, '今日の問題',
       { pointerdown: () => this.startClicked(TodayQ, false) })
   }
@@ -79,7 +84,8 @@ export class Title extends BaseScene {
       const x = width / 2 - bs / 2 + bs * i
       this.add_text(x, rc.bottom + 40, { fontSize: "25px" }, `練習問題 ${i + 1}`,
         { pointerdown: () => this.startClicked(i, true) });
-      if (1 < TodayQ - i - 1) {
+      const q = TodayQ - i - 1;
+      if (1 < q && q < qlist.Q.length) {
         this.add_text(x, rc.bottom + 100, { fontSize: "25px" }, `${["昨日", "一昨日"][i]}の問題`,
           { pointerdown: () => this.startClicked(TodayQ - i - 1, true) });
       }
