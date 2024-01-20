@@ -19,7 +19,7 @@ const LinePerSec = 1 / 2
 const GRWon = {
   c: 0x33ff33,
   text: (t: string | undefined): string => {
-    return `勝利!\n${t}秒`;
+    return t ? `勝利!\n${t}秒` : "勝利"
   },
   borderCol: 0x00ff44,
 };
