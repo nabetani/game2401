@@ -15,8 +15,6 @@ interface QInfo {
   body: QLine[]
 }
 
-const LinePerSec = 1 / 2
-
 const GRWon = {
   c: 0x33ff33,
   text: (t: string | undefined): string => {
@@ -25,6 +23,7 @@ const GRWon = {
   resText: (t: string | undefined): string => {
     return t ? `勝利! / ${t}秒` : "勝利";
   },
+  fontSize: 80,
   borderCol: 0x00ff44,
 };
 const GRFailed = {
@@ -35,6 +34,7 @@ const GRFailed = {
   resText: (t: string | undefined): string => {
     return t ? "敗北!" : "敗北";
   },
+  fontSize: 80,
   borderCol: 0xaa0000,
 };
 const GRGaveUp = {
@@ -45,6 +45,7 @@ const GRGaveUp = {
   resText: (t: string | undefined): string => {
     return "記録なし";
   },
+  fontSize: 40,
   borderCol: 0xaa00ff,
 };
 
@@ -53,6 +54,7 @@ interface GameResultType {
   text: (t: string | undefined) => string;
   resText: (t: string | undefined) => string;
   borderCol: integer;
+  fontSize: number,
 };
 
 const depth = {
@@ -74,7 +76,7 @@ class Line {
   }
 }
 
-type Phase = TryingPhase | PraisePhase | FailedPhase;
+type Phase = TryingPhase | PraisePhase | FailedPhase | GiveUpPhase;
 
 class BasePhase {
   scene: GameMain
@@ -108,12 +110,17 @@ const sincos_r = (t: number, r: number = 1, delta: { x: number, y: number } = { 
 }
 
 class TryingPhase extends BasePhase {
+  t0 = new Date().getTime();
+  prevLine: integer = -1;
+  constructor(scene: GameMain) {
+    super(scene);
+  }
   update() {
-    const prevLine = this.scene.tick / this.scene.fps() * LinePerSec
     ++this.scene.tick;
-    const curLine = this.scene.tick / this.scene.fps() * LinePerSec
-    if (prevLine != curLine) {
-      this.scene.showLine(curLine, true);
+    const curLine = Math.floor((new Date().getTime() - this.t0) / 2000) - 1;
+    if (this.prevLine != curLine) {
+      this.prevLine = curLine;
+      this.scene.showLine(curLine, true, true);
     }
     this.scene.updateTimers()
   }
@@ -143,16 +150,24 @@ class FailedPhase extends GameEndPhase {
   }
 }
 
+class GiveUpPhase extends GameEndPhase {
+  constructor(scene: GameMain) {
+    super(scene)
+    scene.onGameEnd(GRGaveUp)
+  }
+}
+
 export class GameMain extends BaseScene {
-  q: QInfo | undefined
+  q: QInfo | null = null;
   qix: integer = -1;
   tick: number = -1
   textSize: number = 0
   phase: Phase
-  ansBBox: Phaser.Geom.Rectangle | undefined
-  caption: Phaser.GameObjects.Text | undefined
-  graphics: Phaser.GameObjects.Graphics | undefined
-  resBase: Phaser.GameObjects.Graphics | undefined
+  ansBBox: Phaser.Geom.Rectangle | null = null;
+  caption: Phaser.GameObjects.Text | null = null;
+  giveUp: Phaser.GameObjects.Text | null = null;
+  graphics: Phaser.GameObjects.Graphics | null = null;
+  resBase: Phaser.GameObjects.Graphics | null = null;
   practice: boolean = true;
 
   ansCol: integer = 0;
@@ -241,7 +256,7 @@ export class GameMain extends BaseScene {
     const h = this.sys.game.canvas.height;
     const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
     const text = this.add_text(this.sys.game.canvas.width / 2, ty, {
-      fontSize: "80px",
+      fontSize: `${gr.fontSize}px`,
       align: "center",
       backgroundColor: "#0000",
     }, gr.text(resTick), {});
@@ -306,7 +321,7 @@ export class GameMain extends BaseScene {
     }
   }
 
-  getAnsBBox(): [Phaser.Geom.Rectangle | undefined, string?] {
+  getAnsBBox(): [Phaser.Geom.Rectangle | null, string?] {
     for (let ix = 0; ix < this.q!.body.length; ++ix) {
       const q = this.q!.body[ix]!;
       if (q.t.length < 2) { continue }
@@ -319,13 +334,13 @@ export class GameMain extends BaseScene {
 
   showAllLines() {
     for (let ix = this.lines.length; ix < this.q!.body.length; ++ix) {
-      this.showLine(ix, false);
+      this.showLine(ix, false, false);
     }
   }
   createCaption() {
     const b = this.captionBounding
     this.textSize = this.calcTextSize([this.q!.ref], this.textWI, b.height);
-    this.caption = this.add_text(b.centerX, b.centerY, {}, this.q!.ref.t, {})
+    this.caption = this.add_text(b.centerX, b.centerY, { backgroundColor: "#fff" }, this.q!.ref.t, {})
   }
   create(data: { sound: boolean, q: integer, practice: boolean },) {
     this.graphics = this.add.graphics();
@@ -337,8 +352,24 @@ export class GameMain extends BaseScene {
     this.createCaption()
     this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);
     this.tick = -0.5 * this.fps();
+    this.prepareSounds(data.sound, {
+      b0: "b0",
+      b1: "b1",
+      b2: "b2",
+      b3: "b3",
+      b4: "b4",
+      b5: "b5",
+    });
   }
   preload() {
+    this.loadAudios({
+      b0: "bgm0.m4a",
+      b1: "bgm1.m4a",
+      b2: "bgm2.m4a",
+      b3: "bgm3.m4a",
+      b4: "bgm4.m4a",
+      b5: "bgm5.m4a",
+    });
   }
   get lineStyle(): { [key: string]: string | number } {
     return {
@@ -349,10 +380,29 @@ export class GameMain extends BaseScene {
       align: "left",
     }
   }
-  showLine(ix: integer, addTimer: boolean) {
+  giveUpClicked() {
+    this.phase = new GiveUpPhase(this)
+  }
+  showGiveUp() {
+    if (this.giveUp != null) {
+      return;
+    }
+    const y = this.linesBounding.top - 20
+    const x = this.timerLeft;
+    this.giveUp = this.add_text(x, y, {}, "GIVE UP",
+      { pointerdown: () => this.giveUpClicked() }
+    );
+    this.giveUp.setOrigin(0, 0.5);
+  }
+  showLine(ix: integer, addTimer: boolean, sound: boolean) {
     const q = this.q
-    const val = this.q!.body[ix]
-    if (!q || !val) { return }
+    if (!q) { return }
+    const val = q.body[ix];
+    if (!val) {
+      this.sound.get("b0").play();
+      this.showGiveUp();
+      return
+    }
     const height = this.linesBounding.height
     const y = height / q.body.length * (ix + 0.5) + this.linesBounding.top;
     const text = this.add_text(this.textC, y, this.lineStyle, val.t.join(""), {});
@@ -367,7 +417,16 @@ export class GameMain extends BaseScene {
         backgroundColor: "#8f8a",
         align: "right",
       }, "", {}) : null
-    this.lines[ix] = new Line(this.tick, timer, text)
+    this.lines[ix] = new Line(this.tick, timer, text);
+    if (sound) {
+      const s = `b${[
+        1, 1, 1, 1,
+        2, 1, 1, 1,
+        4, 3, 4, 3,
+        4, 3, 5,
+      ][ix] || "1"}`;
+      this.sound.get(s).play();
+    }
   }
   clicked(ix: integer) {
     const line = this.q?.body[ix];

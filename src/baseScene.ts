@@ -1,5 +1,13 @@
 import * as Phaser from 'phaser';
 
+export class NoSound {
+  play() { }
+  stop() { }
+  static create() { return new NoSound(); }
+};
+
+export type Audio = NoSound | Phaser.Sound.NoAudioSound | Phaser.Sound.HTML5AudioSound | Phaser.Sound.WebAudioSound;
+
 export class BaseScene extends Phaser.Scene {
   setLocation(url: string) {
     if (!window.open(url)) {
@@ -26,5 +34,15 @@ export class BaseScene extends Phaser.Scene {
       o.setInteractive();
     }
     return o;
+  }
+  loadAudios(kv: { [key: string]: string; }) {
+    for (let [key, value] of Object.entries(kv)) {
+      this.load.audio(key, `assets/${value}`);
+    }
+  }
+  prepareSounds(on: boolean, kv: { [key: string]: string }) {
+    for (let [key, value] of Object.entries(kv)) {
+      this.sound.add(value);
+    }
   }
 }
