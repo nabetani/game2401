@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { BaseScene } from './baseScene';
 import qlist from './q.json'
+import { WStorage } from './wstorage';
 
 interface QLine {
   t: string[]
@@ -19,14 +20,20 @@ const LinePerSec = 1 / 2
 const GRWon = {
   c: 0x33ff33,
   text: (t: string | undefined): string => {
-    return t ? `勝利!\n${t}秒` : "勝利"
+    return t ? `勝利!\n${t}秒` : "勝利";
+  },
+  resText: (t: string | undefined): string => {
+    return t ? `勝利! / ${t}秒` : "勝利";
   },
   borderCol: 0x00ff44,
 };
 const GRFailed = {
   c: 0xff0000,
   text: (t: string | undefined): string => {
-    return "敗北!";
+    return t ? "敗北!" : "敗北";
+  },
+  resText: (t: string | undefined): string => {
+    return t ? "敗北!" : "敗北";
   },
   borderCol: 0xaa0000,
 };
@@ -35,12 +42,16 @@ const GRGaveUp = {
   text: (t: string | undefined): string => {
     return "よく頑張ったね";
   },
+  resText: (t: string | undefined): string => {
+    return "記録なし";
+  },
   borderCol: 0xaa00ff,
 };
 
 interface GameResultType {
   c: integer
   text: (t: string | undefined) => string;
+  resText: (t: string | undefined) => string;
   borderCol: integer;
 };
 
@@ -134,6 +145,7 @@ class FailedPhase extends GameEndPhase {
 
 export class GameMain extends BaseScene {
   q: QInfo | undefined
+  qix: integer = -1;
   tick: number = -1
   textSize: number = 0
   phase: Phase
@@ -233,6 +245,7 @@ export class GameMain extends BaseScene {
       align: "center",
       backgroundColor: "#0000",
     }, gr.text(resTick), {});
+    WStorage.setResult(this.qix, gr.resText(resTick));
     text.setDepth(depth.result);
     const base = this.resBase!
     const resBB = text.getBounds();
@@ -319,6 +332,7 @@ export class GameMain extends BaseScene {
     this.resBase = this.add.graphics();
     this.practice = data.practice;
     this.graphics.setDepth(depth.emp);
+    this.qix = data.q;
     this.q = qlist.Q[data.q] as QInfo
     this.createCaption()
     this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);

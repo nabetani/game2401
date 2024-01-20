@@ -33,4 +33,7 @@ export class WStorage {
   static result(qix: integer): string {
     return readWS<string>("result", `${qix}`, "記録なし");
   }
+  static setResult(qix: integer, res: string) {
+    storeWS("result", `${qix}`, res);
+  }
 }
