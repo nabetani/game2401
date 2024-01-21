@@ -250,34 +250,39 @@ export class GameMain extends BaseScene {
     }).setInteractive()
   }
 
+  showResPanel(gr: GameResultType, bb: Phaser.Geom.Rectangle | null, resTick: string | undefined) {
+    const msg = gr.text(resTick);
+    if (msg.length == 0) {
+      return
+    }
+    const h = this.sys.game.canvas.height;
+    const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
+    const textObj = this.add_text(this.sys.game.canvas.width / 2, ty, {
+      fontSize: `${gr.fontSize}px`,
+      align: "center",
+      backgroundColor: "#0000",
+    }, msg, {});
+    textObj.setDepth(depth.result);
+    const base = this.resBase!
+    const resBB = textObj.getBounds();
+    const g = 20;
+    const params: [number, number, number, number, number] =
+      [resBB.x - g, resBB.y - g, resBB.width + g * 2, resBB.height + g * 2, 30];
+    base.fillStyle(0xffffff);
+    base.fillRoundedRect(...params);
+    base.lineStyle(20, gr.borderCol, 1.0);
+    base.strokeRoundedRect(...params);
+    base.setDepth(depth.resultBase);
+  }
+
   onGameEnd(gr: GameResultType) {
     this.ansCol = gr.c;
     this.setCaptionLink();
     this.showAllLines();
     const [bb, resTick] = this.getAnsBBox();
-    this.ansBBox = bb;
-    const h = this.sys.game.canvas.height;
-    const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
     WStorage.setResult(this.qix, gr.resText(resTick));
-    const msg = gr.text(resTick);
-    if (msg) {
-      const textObj = this.add_text(this.sys.game.canvas.width / 2, ty, {
-        fontSize: `${gr.fontSize}px`,
-        align: "center",
-        backgroundColor: "#0000",
-      }, msg, {});
-      textObj.setDepth(depth.result);
-      const base = this.resBase!
-      const resBB = textObj.getBounds();
-      const g = 20;
-      const params: [number, number, number, number, number] =
-        [resBB.x - g, resBB.y - g, resBB.width + g * 2, resBB.height + g * 2, 30];
-      base.fillStyle(0xffffff);
-      base.fillRoundedRect(...params);
-      base.lineStyle(20, gr.borderCol, 1.0);
-      base.strokeRoundedRect(...params);
-      base.setDepth(depth.resultBase);
-    }
+    this.ansBBox = bb;
+    this.showResPanel(gr, bb, resTick);
     for (const line of this.lines) {
       line.text.removeAllListeners();
     }
