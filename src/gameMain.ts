@@ -37,10 +37,10 @@ const GRFailed = {
   fontSize: 80,
   borderCol: 0xaa0000,
 };
-const GRGaveUp = {
+const GRGiveUp = {
   c: 0xff0000,
   text: (t: string | undefined): string => {
-    return "よく頑張ったね";
+    return "";
   },
   resText: (t: string | undefined): string => {
     return "記録なし";
@@ -156,7 +156,7 @@ class FailedPhase extends GameEndPhase {
 class GiveUpPhase extends GameEndPhase {
   constructor(scene: GameMain) {
     super(scene)
-    scene.onGameEnd(GRGaveUp)
+    scene.onGameEnd(GRGiveUp)
   }
 }
 
@@ -258,23 +258,26 @@ export class GameMain extends BaseScene {
     this.ansBBox = bb;
     const h = this.sys.game.canvas.height;
     const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
-    const text = this.add_text(this.sys.game.canvas.width / 2, ty, {
-      fontSize: `${gr.fontSize}px`,
-      align: "center",
-      backgroundColor: "#0000",
-    }, gr.text(resTick), {});
     WStorage.setResult(this.qix, gr.resText(resTick));
-    text.setDepth(depth.result);
-    const base = this.resBase!
-    const resBB = text.getBounds();
-    const g = 20;
-    const params: [number, number, number, number, number] =
-      [resBB.x - g, resBB.y - g, resBB.width + g * 2, resBB.height + g * 2, 30];
-    base.fillStyle(0xffffff);
-    base.fillRoundedRect(...params);
-    base.lineStyle(20, gr.borderCol, 1.0);
-    base.strokeRoundedRect(...params);
-    base.setDepth(depth.resultBase);
+    const msg = gr.text(resTick);
+    if (msg) {
+      const textObj = this.add_text(this.sys.game.canvas.width / 2, ty, {
+        fontSize: `${gr.fontSize}px`,
+        align: "center",
+        backgroundColor: "#0000",
+      }, msg, {});
+      textObj.setDepth(depth.result);
+      const base = this.resBase!
+      const resBB = textObj.getBounds();
+      const g = 20;
+      const params: [number, number, number, number, number] =
+        [resBB.x - g, resBB.y - g, resBB.width + g * 2, resBB.height + g * 2, 30];
+      base.fillStyle(0xffffff);
+      base.fillRoundedRect(...params);
+      base.lineStyle(20, gr.borderCol, 1.0);
+      base.strokeRoundedRect(...params);
+      base.setDepth(depth.resultBase);
+    }
     for (const line of this.lines) {
       line.text.removeAllListeners();
     }
