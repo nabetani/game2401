@@ -369,16 +369,15 @@ export class GameMain extends BaseScene {
     this.createCaption()
     this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);
     this.tick = -0.5 * this.fps();
-    this.prepareSounds(data.soundOn, {
-      b0: "b0",
-      b1: "b1",
-      b2: "b2",
-      b3: "b3",
-      b4: "b4",
-      b5: "b5",
-      b6: "b6",
-      b7: "b7",
-    });
+    this.prepareSounds(data.soundOn, [
+      "b0",
+      "b1",
+      "b2",
+      "b3",
+      "b4",
+      "b5",
+      "b6",
+      "b7"]);
   }
   preload() {
     this.loadAudios({

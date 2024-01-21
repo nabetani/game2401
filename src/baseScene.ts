@@ -40,9 +40,12 @@ export class BaseScene extends Phaser.Scene {
       this.load.audio(key, `assets/${value}`);
     }
   }
-  prepareSounds(on: boolean, kv: { [key: string]: string }) {
-    for (let [key, value] of Object.entries(kv)) {
-      this.sound.add(value);
+  prepareSounds(soundOn: boolean, values: string[]) {
+    const conf: Phaser.Types.Sound.SoundConfig = soundOn ? {} : { mute: true, volume: 0 };
+    for (const value of values) {
+      const s = this.sound.get(value);
+      if (s) { s.destroy(); }
+      this.sound.add(value, conf);
     }
   }
 }
