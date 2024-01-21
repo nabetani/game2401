@@ -23,6 +23,7 @@ const GRWon = {
   resText: (t: string | undefined): string => {
     return t ? `勝利! / ${t}秒` : "勝利";
   },
+  sound: "found",
   fontSize: 80,
   borderCol: 0x00ff44,
 };
@@ -34,6 +35,7 @@ const GRFailed = {
   resText: (t: string | undefined): string => {
     return t ? "敗北!" : "敗北";
   },
+  sound: "fail",
   fontSize: 80,
   borderCol: 0xaa0000,
 };
@@ -45,6 +47,7 @@ const GRGiveUp = {
   resText: (t: string | undefined): string => {
     return "記録なし";
   },
+  sound: "giveup",
   fontSize: 40,
   borderCol: 0xaa00ff,
 };
@@ -53,6 +56,7 @@ interface GameResultType {
   c: integer
   text: (t: string | undefined) => string;
   resText: (t: string | undefined) => string;
+  sound: string,
   borderCol: integer;
   fontSize: number,
 };
@@ -275,6 +279,8 @@ export class GameMain extends BaseScene {
   }
 
   onGameEnd(gr: GameResultType) {
+    this.sound.stopAll();
+    this.sound.get(gr.sound).play();
     this.ansCol = gr.c;
     this.setCaptionLink();
     this.showGoToTitle();
@@ -370,14 +376,8 @@ export class GameMain extends BaseScene {
     this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);
     this.tick = -0.5 * this.fps();
     this.prepareSounds(data.soundOn, [
-      "b0",
-      "b1",
-      "b2",
-      "b3",
-      "b4",
-      "b5",
-      "b6",
-      "b7"]);
+      "b0", "b1", "b2", "b3", "b4", "b5", "b6", "b7",
+      "fail", "giveup", "found",]);
   }
   preload() {
     this.loadAudios({
@@ -389,6 +389,9 @@ export class GameMain extends BaseScene {
       b5: "bgm5.m4a",
       b6: "bgm6.m4a",
       b7: "bgm7.m4a",
+      fail: "fail.m4a",
+      giveup: "giveup.m4a",
+      found: "found.m4a",
     });
   }
   get lineStyle(): { [key: string]: string | number } {
@@ -412,23 +415,23 @@ export class GameMain extends BaseScene {
     this.scene.start('Title', { soundOn: this.soundOn });
   }
   showGoToTitle() {
-    const y = 30
+    const y = this.captionBounding.top;
     const x = this.timerLeft;
     const t = this.add_text(x, y, {}, "タイトルへ",
       { pointerdown: () => this.gotoTitle() }
     );
-    t.setOrigin(0, 0.5);
+    t.setOrigin(0, 0);
   }
   showGiveUp() {
     if (this.giveUp != null) {
       return;
     }
-    const y = 30;
+    const y = this.captionBounding.top;
     const x = this.timerLeft;
     this.giveUp = this.add_text(x, y, {}, "GIVE UP",
       { pointerdown: () => this.giveUpClicked() }
     );
-    this.giveUp.setOrigin(0, 0.5);
+    this.giveUp.setOrigin(0, 0);
   }
   showLine(ix: integer, addTimer: boolean, sound: boolean) {
     const q = this.q
