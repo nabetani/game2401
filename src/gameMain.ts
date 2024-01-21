@@ -173,8 +173,8 @@ export class GameMain extends BaseScene {
   resBase: Phaser.GameObjects.Graphics | null = null;
   practice: boolean = true;
   soundOn: boolean = false;
-
   ansCol: integer = 0;
+  lines: Line[] = []
 
   get timerRight(): number {
     const w = this.sys.game.canvas.width
@@ -217,8 +217,6 @@ export class GameMain extends BaseScene {
       this.textLeft, top,
       this.textW, h - top - 10)
   }
-
-  lines: Line[] = []
   constructor() {
     super("GameMain");
     this.phase = new TryingPhase(this)
@@ -359,6 +357,8 @@ export class GameMain extends BaseScene {
     this.caption = this.add_text(b.centerX, b.centerY, { backgroundColor: "#fff" }, this.q!.ref.t, {})
   }
   create(data: { soundOn: boolean, q: integer, practice: boolean },) {
+    this.lines = [];
+    this.phase = new TryingPhase(this)
     this.soundOn = data.soundOn;
     this.graphics = this.add.graphics();
     this.resBase = this.add.graphics();
@@ -405,6 +405,11 @@ export class GameMain extends BaseScene {
     this.phase = new GiveUpPhase(this)
   }
   gotoTitle() {
+    for (const line of this.lines) {
+      line.text.destroy();
+      line.timer?.destroy();
+    }
+    this.lines = [];
     this.scene.start('Title', { soundOn: this.soundOn });
   }
   showGoToTitle() {
