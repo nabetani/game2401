@@ -172,6 +172,7 @@ export class GameMain extends BaseScene {
   graphics: Phaser.GameObjects.Graphics | null = null;
   resBase: Phaser.GameObjects.Graphics | null = null;
   practice: boolean = true;
+  soundOn: boolean = false;
 
   ansCol: integer = 0;
 
@@ -278,6 +279,10 @@ export class GameMain extends BaseScene {
   onGameEnd(gr: GameResultType) {
     this.ansCol = gr.c;
     this.setCaptionLink();
+    this.showGoToTitle();
+    if (this.giveUp != null) {
+      this.giveUp.destroy();
+    }
     this.showAllLines();
     const [bb, resTick] = this.getAnsBBox();
     WStorage.setResult(this.qix, gr.resText(resTick));
@@ -353,7 +358,8 @@ export class GameMain extends BaseScene {
     this.textSize = this.calcTextSize([this.q!.ref], this.textWI, b.height);
     this.caption = this.add_text(b.centerX, b.centerY, { backgroundColor: "#fff" }, this.q!.ref.t, {})
   }
-  create(data: { sound: boolean, q: integer, practice: boolean },) {
+  create(data: { soundOn: boolean, q: integer, practice: boolean },) {
+    this.soundOn = data.soundOn;
     this.graphics = this.add.graphics();
     this.resBase = this.add.graphics();
     this.practice = data.practice;
@@ -363,13 +369,15 @@ export class GameMain extends BaseScene {
     this.createCaption()
     this.textSize = this.calcTextSize(this.q.body, this.textWI, this.linesBounding.height);
     this.tick = -0.5 * this.fps();
-    this.prepareSounds(data.sound, {
+    this.prepareSounds(data.soundOn, {
       b0: "b0",
       b1: "b1",
       b2: "b2",
       b3: "b3",
       b4: "b4",
       b5: "b5",
+      b6: "b6",
+      b7: "b7",
     });
   }
   preload() {
@@ -380,6 +388,8 @@ export class GameMain extends BaseScene {
       b3: "bgm3.m4a",
       b4: "bgm4.m4a",
       b5: "bgm5.m4a",
+      b6: "bgm6.m4a",
+      b7: "bgm7.m4a",
     });
   }
   get lineStyle(): { [key: string]: string | number } {
@@ -394,11 +404,22 @@ export class GameMain extends BaseScene {
   giveUpClicked() {
     this.phase = new GiveUpPhase(this)
   }
+  gotoTitle() {
+    this.scene.start('Title', { soundOn: this.soundOn });
+  }
+  showGoToTitle() {
+    const y = 30
+    const x = this.timerLeft;
+    const t = this.add_text(x, y, {}, "タイトルへ",
+      { pointerdown: () => this.gotoTitle() }
+    );
+    t.setOrigin(0, 0.5);
+  }
   showGiveUp() {
     if (this.giveUp != null) {
       return;
     }
-    const y = this.linesBounding.top - 20
+    const y = 30;
     const x = this.timerLeft;
     this.giveUp = this.add_text(x, y, {}, "GIVE UP",
       { pointerdown: () => this.giveUpClicked() }
@@ -434,7 +455,7 @@ export class GameMain extends BaseScene {
         1, 1, 1, 1,
         2, 1, 1, 1,
         4, 3, 4, 3,
-        4, 3, 5,
+        5, 6, 7,
       ][ix] || "1"}`;
       this.sound.get(s).play();
     }
