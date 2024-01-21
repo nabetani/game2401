@@ -1,13 +1,5 @@
 import * as Phaser from 'phaser';
 
-export class NoSound {
-  play() { }
-  stop() { }
-  static create() { return new NoSound(); }
-};
-
-export type Audio = NoSound | Phaser.Sound.NoAudioSound | Phaser.Sound.HTML5AudioSound | Phaser.Sound.WebAudioSound;
-
 export class BaseScene extends Phaser.Scene {
   setLocation(url: string) {
     if (!window.open(url)) {
