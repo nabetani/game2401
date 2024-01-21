@@ -40,20 +40,20 @@ export class Title extends BaseScene {
       y = text.getBounds().top - 10;
     });
   }
-  create() {
+  create(data: { soundOn: boolean | undefined }) {
     this.add.image(0, 0, 'title').setOrigin(0, 0);
     const soundStyle = {
       fontSize: "35px",
     }
     const soundBtns: Phaser.GameObjects.Text[] = [];
-    const toggleSound = (on: boolean) => {
+    const setSoundOn = (on: boolean) => {
       this.soundOn = on;
       soundBtns[0].setScale(on ? 1 : 0.7);
       soundBtns[1].setScale(on ? 0.7 : 1);
     };
-    soundBtns.push(this.add_text(220, 30, soundStyle, 'Sound ON', { pointerdown: () => toggleSound(true) }));
-    soundBtns.push(this.add_text(400, 30, soundStyle, 'Sound OFF', { pointerdown: () => toggleSound(false) }));
-    toggleSound(false);
+    soundBtns.push(this.add_text(220, 30, soundStyle, 'Sound ON', { pointerdown: () => setSoundOn(true) }));
+    soundBtns.push(this.add_text(400, 30, soundStyle, 'Sound OFF', { pointerdown: () => setSoundOn(false) }));
+    setSoundOn(data.soundOn || false);
     const todayBtn = this.addTodayButton();
     this.addStartButtons(todayBtn.getBounds());
     this.addLinks();
