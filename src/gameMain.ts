@@ -110,15 +110,18 @@ const sincos_r = (t: number, r: number = 1, delta: { x: number, y: number } = { 
 }
 
 class TryingPhase extends BasePhase {
-  t0 = new Date().getTime();
+  t0: number | null = null;
   prevLine: integer = -1;
   constructor(scene: GameMain) {
     super(scene);
   }
   update() {
+    if (this.t0 == null) {
+      this.t0 = new Date().getTime() + 1000;
+    }
     ++this.scene.tick;
-    const curLine = Math.floor((new Date().getTime() - this.t0) / 2000) - 1;
-    if (this.prevLine != curLine) {
+    const curLine = Math.floor((new Date().getTime() - this.t0) / 2000);
+    if (0 <= curLine && this.prevLine != curLine) {
       this.prevLine = curLine;
       this.scene.showLine(curLine, true, true);
     }
