@@ -5,13 +5,19 @@ import qlist from './q.json'
 
 
 const T0 = new Date("2024-01-15T04:00:00+09:00").getTime();
-// const T0 = new Date("2023-12-28T04:00:00+09:00").getTime();
-const TodayQ = Math.floor((new Date().getTime() - T0) / (24 * 60 * 60 * 1000));
-const TodayQPlayed = WStorage.played(TodayQ);
-
 
 export class Title extends BaseScene {
   soundOn: boolean = false;
+  _todayQ: integer | null = null;
+  get todayQ(): integer {
+    if (null === this._todayQ) {
+      this._todayQ = Math.floor((new Date().getTime() - T0) / (24 * 60 * 60 * 1000));
+    }
+    return this._todayQ!;
+  }
+  get todayQPlayed(): boolean {
+    return WStorage.played(this.todayQ);
+  }
   constructor() { super("Title") }
   preload() {
     this.load.image("title", "assets/title.webp");
@@ -26,15 +32,15 @@ export class Title extends BaseScene {
     this.scene.start('GameMain', { soundOn: this.soundOn, q: q, practice: practice });
   }
   addLinks() {
-    const tag = "tbd";
-    let y = this.sys.game.canvas.height - 10;
+    const tag = "タイツを探せ";
+    let y = this.sys.game.canvas.height - 50;
     [
       ["Source code and license", "https://github.com/nabetani/game2401/"],
       ["鍋谷武典 @ タイッツー", "https://taittsuu.com/users/nabetani"],
       ["制作ノート", "https://nabetani.hatenadiary.com/entry/2024/01/game24b"],
       ["タイッツー #" + tag, "https://taittsuu.com/search/taiitsus/hashtags?query=" + tag],
     ].forEach((e, ix) => {
-      const text = this.add_text(500, y, {}, e[0],
+      const text = this.add_text(462, y, {}, e[0],
         { pointerdown: () => { this.setLocation(e[1]) } });
       text.setOrigin(1, 1);
       y = text.getBounds().top - 10;
@@ -51,31 +57,31 @@ export class Title extends BaseScene {
       soundBtns[0].setScale(on ? 1 : 0.7);
       soundBtns[1].setScale(on ? 0.7 : 1);
     };
-    soundBtns.push(this.add_text(220, 30, soundStyle, 'Sound ON', { pointerdown: () => setSoundOn(true) }));
-    soundBtns.push(this.add_text(400, 30, soundStyle, 'Sound OFF', { pointerdown: () => setSoundOn(false) }));
+    soundBtns.push(this.add_text(190, 70, soundStyle, 'Sound ON', { pointerdown: () => setSoundOn(true) }));
+    soundBtns.push(this.add_text(370, 70, soundStyle, 'Sound OFF', { pointerdown: () => setSoundOn(false) }));
     setSoundOn(data.soundOn || false);
     const todayBtn = this.addTodayButton();
     this.addStartButtons(todayBtn.getBounds());
     this.addLinks();
   }
   todayResult(): string {
-    return WStorage.result(TodayQ);
+    return WStorage.result(this.todayQ);
   }
   addTodayButton(): Phaser.GameObjects.Text {
     const { width, height } = this.sys.game.canvas;
-    if (TodayQ < 2) {
+    if (this.todayQ < 2) {
       return this.add_text(width / 2, height / 4, { fontSize: "65px" }, ' 明日公開 ', {});
     }
-    if (TodayQPlayed) {
+    if (this.todayQPlayed) {
       const b = this.add_text(width / 2, height / 4, { fontSize: "55px" }, "今日の結果:", {});
       const bb = b.getBounds();
       return this.add_text(width / 2, bb.bottom + 50, { fontSize: "30px" }, this.todayResult(), {});
     }
-    if (qlist.Q.length <= TodayQ) {
+    if (qlist.Q.length <= this.todayQ) {
       return this.add_text(width / 2, height / 4, { fontSize: "40px" }, '問題の在庫切れ', {});
     }
     return this.add_text(width / 2, height / 4, { fontSize: "65px" }, '今日の問題',
-      { pointerdown: () => this.startClicked(TodayQ, false) })
+      { pointerdown: () => this.startClicked(this.todayQ, false) })
   }
   addStartButtons(rc: Phaser.Geom.Rectangle) {
     const { width, height } = this.sys.game.canvas;
@@ -84,10 +90,10 @@ export class Title extends BaseScene {
       const x = width / 2 - bs / 2 + bs * i
       this.add_text(x, rc.bottom + 40, { fontSize: "25px" }, `練習問題 ${i + 1}`,
         { pointerdown: () => this.startClicked(i, true) });
-      const q = TodayQ - i - 1;
+      const q = this.todayQ - i - 1;
       if (1 < q && q < qlist.Q.length) {
         this.add_text(x, rc.bottom + 100, { fontSize: "25px" }, `${["昨日", "一昨日"][i]}の問題`,
-          { pointerdown: () => this.startClicked(TodayQ - i - 1, true) });
+          { pointerdown: () => this.startClicked(this.todayQ - i - 1, true) });
       }
     }
   }
