@@ -363,6 +363,8 @@ export class GameMain extends BaseScene {
     this.caption = this.add_text(b.centerX, b.centerY, { backgroundColor: "#fff" }, this.q!.ref.t, {})
   }
   create(data: { soundOn: boolean, q: integer, practice: boolean },) {
+    this.add.image(0, 0, 'bg').setOrigin(0, 0).setDepth(depth.bg);
+
     this.lines = [];
     this.phase = new TryingPhase(this)
     this.soundOn = data.soundOn;
@@ -380,6 +382,7 @@ export class GameMain extends BaseScene {
       "fail", "giveup", "found",]);
   }
   preload() {
+    this.load.image("bg", "assets/bg.webp");
     this.loadAudios({
       b0: "bgm0.m4a",
       b1: "bgm1.m4a",
