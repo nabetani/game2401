@@ -15,6 +15,12 @@ export class Title extends BaseScene {
     }
     return this._todayQ!;
   }
+  get ruleConfirmed(): boolean {
+    return WStorage.ruleConfirmed();
+  }
+  setRuleConfirmed() {
+    WStorage.setRuleConfirmed();
+  }
   get todayQPlayed(): boolean {
     return WStorage.played(this.todayQ);
   }
@@ -62,13 +68,62 @@ export class Title extends BaseScene {
     setSoundOn(data.soundOn || false);
     const todayBtn = this.addTodayButton();
     this.addStartButtons(todayBtn.getBounds());
+    const { width } = this.sys.game.canvas;
+    if (this.ruleConfirmed) {
+      this.addShowRuleButton(width / 2, 500, { fontSize: "25px" });
+    }
     this.addLinks();
   }
   todayResult(): string {
     return WStorage.result(this.todayQ);
   }
+  showRule() {
+    const { width, height } = this.sys.game.canvas;
+    const msg = [
+      "日本語の文章が 1行ずつ表示されます。",
+      "表示された行に「たいつ」と読む部分があったら、その行をクリックしてください。",
+      "句読点が等が挟まっていても、仮名にしたときに",
+      "「た」「い」「つ」 が順に並んでいたらそれはタイツです。",
+      "",
+      "例1: ✅ また、いつか",
+      "　　　（読点が挟まっていても良い）",
+      "例1: ✅ 失われた逸材",
+      "　　　（「逸材」は「いつざい」なので）",
+      "例2: ✅ しまった……! いつの間に",
+      "　　　（「！」や「…」が何個挟まっていても良い）",
+      "例3: ❌ バッター、逸見",
+      "　　　（音引き「ー」が挟まっている）",
+      "例4: ❌ キンメダイ釣りに",
+      "　　　（濁点のある「ダ」は「タ」ではない）",
+      "例5: ❌ 痛いっ、なにするの！",
+      "　　　（「っ」と「つ」は区別する）",
+
+    ].join("\n");
+    const style = {
+      wordWrap: { width: width * 0.9, useAdvancedWrap: true },
+      fontSize: "18px",
+      fixedWidth: width * 0.95
+    };
+    const rule = this.add_text(width / 2, height / 2, style, msg,
+      {
+        pointerdown: () => {
+          rule.destroy();
+          if (!this.ruleConfirmed) {
+            this.setRuleConfirmed();
+            this.scene.start('Title', { soundOn: this.soundOn });
+          }
+        }
+      });
+  }
+  addShowRuleButton(x: number, y: number, style: Phaser.Types.GameObjects.Text.TextStyle): Phaser.GameObjects.Text {
+    return this.add_text(x, y, style, ' ルール説明 ',
+      { pointerdown: () => this.showRule() });
+  }
   addTodayButton(): Phaser.GameObjects.Text {
     const { width, height } = this.sys.game.canvas;
+    if (!this.ruleConfirmed) {
+      return this.addShowRuleButton(width / 2, height / 4, { fontSize: "65px" });
+    }
     if (this.todayQ < 2) {
       return this.add_text(width / 2, height / 4, { fontSize: "65px" }, ' 明日公開 ', {});
     }
@@ -84,7 +139,7 @@ export class Title extends BaseScene {
       { pointerdown: () => this.startClicked(this.todayQ, false) })
   }
   addStartButtons(rc: Phaser.Geom.Rectangle) {
-    const { width, height } = this.sys.game.canvas;
+    const { width } = this.sys.game.canvas;
     const bs = width * 0.4;
     for (let i = 0; i < 2; ++i) {
       const x = width / 2 - bs / 2 + bs * i

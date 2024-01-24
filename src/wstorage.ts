@@ -23,7 +23,15 @@ const readWS = <T>(name: string, key: string, fallback: T): T => {
   return r;
 }
 
+const GENERAL = "general";
+
 export class WStorage {
+  static ruleConfirmed(): boolean {
+    return readWS<boolean>(GENERAL, "ruleConfirmed", false);
+  }
+  static setRuleConfirmed() {
+    storeWS(GENERAL, "ruleConfirmed", true);
+  }
   static played(qix: integer): boolean {
     return readWS<boolean>("played", `${qix}`, false);
   }
