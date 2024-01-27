@@ -253,13 +253,17 @@ export class GameMain extends BaseScene {
     }).setInteractive()
   }
 
+  resY(): number {
+    const h = this.sys.game.canvas.height;
+    return (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
+  }
+
   showResPanel(gr: GameResultType, bb: Phaser.Geom.Rectangle | null, resTick: string | undefined) {
     const msg = gr.text(resTick);
     if (msg.length == 0) {
       return
     }
-    const h = this.sys.game.canvas.height;
-    const ty = (this.ansBBox!.centerY < h / 2 ? 0.75 : 0.25) * h;
+    const ty = this.resY();
     const textObj = this.add_text(this.sys.game.canvas.width / 2, ty, {
       fontSize: `${gr.fontSize}px`,
       align: "center",
@@ -278,6 +282,20 @@ export class GameMain extends BaseScene {
     base.setDepth(depth.resultBase);
   }
 
+  showShareButton(text: string) {
+    const ty = this.resY();
+    const { width, height } = this.sys.game.canvas;
+    const share = this.add.sprite(width * 0.9, ty + 150, "share");
+    share.setOrigin(1, 0)
+    share.setScale(0.5);
+    share.on('pointerdown', () => {
+      const encoded = encodeURIComponent(text);
+      const url = "https://taittsuu.com/share?text=" + encoded;
+      if (!window.open(url)) {
+        location.href = url;
+      }
+    }).setInteractive();
+  }
   onGameEnd(gr: GameResultType) {
     this.sound.stopAll();
     this.sound.get(gr.sound).play();
@@ -292,6 +310,13 @@ export class GameMain extends BaseScene {
     WStorage.setResult(this.qix, gr.resText(resTick));
     this.ansBBox = bb;
     this.showResPanel(gr, bb, resTick);
+    const qinfo = `${this.q!.ref.t.split("\n")[0]}`
+    const shareText = [
+      `記録: ${gr.resText(resTick)}`,
+      `#タイツを探せ (${qinfo})`,
+      "https://nabetani.sakura.ne.jp/game24b/",
+    ].join("\n");
+    this.showShareButton(shareText);
     for (const line of this.lines) {
       line.text.removeAllListeners();
     }
@@ -383,6 +408,7 @@ export class GameMain extends BaseScene {
   }
   preload() {
     this.load.image("bg", "assets/bg.webp");
+    this.load.image("share", "assets/share.webp");
     this.loadAudios({
       b0: "bgm0.m4a",
       b1: "bgm1.m4a",
@@ -466,7 +492,8 @@ export class GameMain extends BaseScene {
         2, 1, 1, 1,
         4, 3, 4, 3,
         5, 6, 7,
-      ][ix] || "1"}`;
+      ][ix] || "1"
+        }`;
       this.sound.get(s).play();
     }
   }
