@@ -289,6 +289,7 @@ export class GameMain extends BaseScene {
     const share = this.add.sprite(width * 0.9, ty + 150, "share");
     share.setOrigin(1, 0)
     share.setScale(0.5);
+    share.setDepth(depth.resultBase);
     share.on('pointerdown', () => {
       const encoded = encodeURIComponent(text);
       const url = "https://taittsuu.com/share?text=" + encoded;
