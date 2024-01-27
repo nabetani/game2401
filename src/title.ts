@@ -9,6 +9,11 @@ const T0 = new Date("2024-01-15T04:00:00+09:00").getTime();
 export class Title extends BaseScene {
   soundOn: boolean = false;
   _todayQ: integer | null = null;
+  get todayQKind(): string {
+    const t = T0 + this.todayQ * (24 * 60 * 60 * 1000);
+    const d = new Date(t);
+    return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} の問題`;
+  }
   get todayQ(): integer {
     if (null === this._todayQ) {
       this._todayQ = Math.floor((new Date().getTime() - T0) / (24 * 60 * 60 * 1000));
@@ -28,14 +33,14 @@ export class Title extends BaseScene {
   preload() {
     this.load.image("title", "assets/title.webp");
   }
-  startClicked(q: integer, practice: boolean) {
+  startClicked(q: integer, practice: boolean, qkind: string) {
     if (WStorage.played(q)) {
       practice = true;
     }
     if (!practice) {
       WStorage.setPlayed(q);
     }
-    this.scene.start('GameMain', { soundOn: this.soundOn, q: q, practice: practice });
+    this.scene.start('GameMain', { soundOn: this.soundOn, q: q, practice: practice, qkind: qkind });
   }
   addLinks() {
     const tag = "タイツを探せ";
@@ -136,7 +141,7 @@ export class Title extends BaseScene {
       return this.add_text(width / 2, height / 4, { fontSize: "40px" }, '問題の在庫切れ', {});
     }
     return this.add_text(width / 2, height / 4, { fontSize: "65px" }, '今日の問題',
-      { pointerdown: () => this.startClicked(this.todayQ, false) })
+      { pointerdown: () => this.startClicked(this.todayQ, false, this.todayQKind) })
   }
   addStartButtons(rc: Phaser.Geom.Rectangle) {
     const { width } = this.sys.game.canvas;
@@ -144,11 +149,12 @@ export class Title extends BaseScene {
     for (let i = 0; i < 2; ++i) {
       const x = width / 2 - bs / 2 + bs * i
       this.add_text(x, rc.bottom + 40, { fontSize: "25px" }, `練習問題 ${i + 1}`,
-        { pointerdown: () => this.startClicked(i, true) });
+        { pointerdown: () => this.startClicked(i, true, "練習問題") });
       const q = this.todayQ - i - 1;
       if (1 < q && q < qlist.Q.length) {
-        this.add_text(x, rc.bottom + 100, { fontSize: "25px" }, `${["昨日", "一昨日"][i]}の問題`,
-          { pointerdown: () => this.startClicked(this.todayQ - i - 1, true) });
+        const qk = `${["昨日", "一昨日"][i]}の問題`;
+        this.add_text(x, rc.bottom + 100, { fontSize: "25px" }, qk,
+          { pointerdown: () => this.startClicked(this.todayQ - i - 1, true, qk) });
       }
     }
   }

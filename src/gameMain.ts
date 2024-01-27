@@ -168,6 +168,7 @@ export class GameMain extends BaseScene {
   q: QInfo | null = null;
   qix: integer = -1;
   tick: number = -1
+  qkind: string = ""
   textSize: number = 0
   phase: Phase
   ansBBox: Phaser.Geom.Rectangle | null = null;
@@ -313,7 +314,7 @@ export class GameMain extends BaseScene {
     const qinfo = `${this.q!.ref.t.split("\n")[0]}`
     const shareText = [
       `記録: ${gr.resText(resTick)}`,
-      `#タイツを探せ (${qinfo})`,
+      `#タイツを探せ - ${this.qkind} (${qinfo})`,
       "https://nabetani.sakura.ne.jp/game24b/",
     ].join("\n");
     this.showShareButton(shareText);
@@ -387,9 +388,9 @@ export class GameMain extends BaseScene {
     this.textSize = this.calcTextSize([this.q!.ref], this.textWI, b.height);
     this.caption = this.add_text(b.centerX, b.centerY, { backgroundColor: "#fff" }, this.q!.ref.t, {})
   }
-  create(data: { soundOn: boolean, q: integer, practice: boolean },) {
+  create(data: { soundOn: boolean, q: integer, practice: boolean, qkind: string },) {
     this.add.image(0, 0, 'bg').setOrigin(0, 0).setDepth(depth.bg);
-
+    this.qkind = data.qkind;
     this.lines = [];
     this.phase = new TryingPhase(this)
     this.soundOn = data.soundOn;
