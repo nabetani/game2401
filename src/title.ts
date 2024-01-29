@@ -153,16 +153,21 @@ export class Title extends BaseScene {
   }
   addStartButtons(rc: Phaser.Geom.Rectangle) {
     const { width } = this.sys.game.canvas;
-    const bs = width * 0.4;
     for (let i = 0; i < 2; ++i) {
+      const bs = width * 0.4;
       const x = width / 2 - bs / 2 + bs * i
       this.add_text(x, rc.bottom + 40, { fontSize: "25px" }, `練習問題 ${i + 1}`,
         { pointerdown: () => this.startClicked(i, true, "練習問題") });
-      const q = this.todayQ - i - 1;
+    }
+    const start = this.todayQPlayed ? 0 : 1;
+    for (let i = start; i < 3; ++i) {
+      const bs = width * 0.3;
+      const x = width / 2 - bs + bs * i
+      const q = this.todayQ - i;
       if (1 < q && q < qlist.Q.length) {
-        const qk = `${["昨日", "一昨日"][i]}の問題`;
+        const qk = `${["今日", "昨日", "一昨日"][i]}の問題`;
         this.add_text(x, rc.bottom + 100, { fontSize: "25px" }, qk,
-          { pointerdown: () => this.startClicked(this.todayQ - i - 1, true, qk) });
+          { pointerdown: () => this.startClicked(this.todayQ - i, true, qk) });
       }
     }
   }
