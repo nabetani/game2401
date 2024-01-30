@@ -109,7 +109,6 @@ export class Title extends BaseScene {
       "",
       "日本時間午前四時に問題が更新されます。",
       "今日の問題は、一日一回しか遊べません。",
-
     ].join("\n");
     const style = {
       wordWrap: { width: width * 0.9, useAdvancedWrap: true },
@@ -117,16 +116,36 @@ export class Title extends BaseScene {
       fixedWidth: width * 0.95,
       backgroundColor: "white",
     };
+    let ruleObjs: Phaser.GameObjects.GameObject[] = [];
     const rule = this.add_text(width / 2, height / 2, style, msg,
       {
         pointerdown: () => {
-          rule.destroy();
+          for (const r of ruleObjs) {
+            r.destroy();
+          }
           if (!this.ruleConfirmed) {
             this.setRuleConfirmed();
             this.scene.start('Title', { soundOn: this.soundOn });
           }
         }
       });
+    ruleObjs.push(rule);
+    ruleObjs.push(...this.addCloseBox(rule.getBounds(), rule.depth));
+  }
+  addCloseBox(rc: Phaser.Geom.Rectangle, d: number): Phaser.GameObjects.GameObject[] {
+    let objs = [];
+    const { width, height } = this.sys.game.canvas
+    const w = width / 15;
+    const h = w;
+    const x = rc.right - w / 2;
+    const y = rc.top + h / 2;
+    objs.push(this.add.rectangle(x, y, w, h, 0x727171, 1));
+    for (const i of [45, -45]) {
+      const r = this.add.rectangle(x, y, w / 7, h * 0.9, 0xff8888, 1);
+      r.setAngle(i);
+      objs.push(r);
+    }
+    return objs;
   }
   addShowRuleButton(x: number, y: number, style: Phaser.Types.GameObjects.Text.TextStyle): Phaser.GameObjects.Text {
     return this.add_text(x, y, style, ' ルール説明 ',
