@@ -90,13 +90,22 @@ def build(s)
   url = /^url\s*\:\s*([^\r\n]+)/.match(s)&.[](1)
   ref={t:ref_text}
   ref[:url] = url if url
-  {ref:ref, body:get_text(s.split(/^\-{3,}$/).last)}
+  body = get_text(s.split(/^\-{3,}$/).last)
+  body.each.with_index{ |e,ix| p [ ix, e ] }
+  {ref:ref, body:body}
 end
 
 def main
+  failed = false
   q=Dir.glob( File.join(HERE, "cropped_texts/*.txt")).sort.map{ |fn|
-    build(File.open(fn, &:read))
+    begin
+      build(File.open(fn, &:read))
+    rescue => e
+      p( { fn:fn, e:e } )
+      raise
+    end
   }
+  raise "failed" if failed
   File.open(File.join(HERE,"../src/q.json"), "w") do |f|
     pp q
     f.puts( JSON.pretty_generate({Q:q}))
