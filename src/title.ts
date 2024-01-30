@@ -4,7 +4,7 @@ import { BaseScene } from './baseScene';
 import qlist from './q.json'
 
 
-const T0 = new Date("2024-01-15T04:00:00+09:00").getTime();
+const T0 = new Date("2024-01-28T00:00:00+09:00").getTime();
 
 export class Title extends BaseScene {
   soundOn: boolean = false;
@@ -107,8 +107,8 @@ export class Title extends BaseScene {
       "例8: ❌ 痛いっ、なにするの！",
       "　　　→ 促音の「っ」は「たいつ」の一部ではない",
       "",
-      "日本時間午前四時に問題が更新されます。",
-      "今日の問題は、一日一回しか遊べません。",
+      "日本時間午前零時に問題が更新されます。",
+      "今日の問題のタイムアタックは、一日一回しか遊べません。",
     ].join("\n");
     const style = {
       wordWrap: { width: width * 0.9, useAdvancedWrap: true },
