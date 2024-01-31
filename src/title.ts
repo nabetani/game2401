@@ -4,7 +4,7 @@ import { BaseScene } from './baseScene';
 import qlist from './q.json'
 
 
-const T0 = new Date("2024-01-28T00:00:00+09:00").getTime();
+const T0 = new Date("2024-01-30T00:00:00+09:00").getTime();
 
 export class Title extends BaseScene {
   soundOn: boolean = false;
